@@ -324,10 +324,14 @@ VisitorMode --> Hub : visitor data and feeding
 ```
 
 ## Dataflow/Sequence Diagram
-# Staff Mode
+
+The following sequence diagrams illustrate the main interactions between AquaGuard’s components, demonstrating how Staff and Visitor Modes communicate through the central Hub to support aquarium monitoring, equipment control, camera viewing, and feeding requests.
+
+### Staff Mode
+
+This sequence diagram illustrates how AquaGuard monitors sensor readings, evaluates alarms, and processes equipment commands through the Hub and DataTransitBus.
+
 ```mermaid
-
-
 %%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
     participant Staff as StaffMode
@@ -361,7 +365,9 @@ sequenceDiagram
     Hub-->>Staff: Update dashboard
 ```
 
-# Visitor Mode
+### Visitor Mode
+
+This sequence diagram illustrates how visitors view simulated habitat camera feeds and request feeding through the Hub and DataTransitBus.
 
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}}}%%
