@@ -326,8 +326,8 @@ VisitorMode --> Hub : visitor data and feeding
 ## Dataflow/Sequence Diagram
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "actorLineColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "loopTextColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000"}}}%%
 
+%%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
     participant Staff as StaffMode
     participant Hub
@@ -341,11 +341,12 @@ sequenceDiagram
     Bus->>Habitat: Forward request
     Habitat->>Sensor: ReadNextValue()
     Sensor->>File: ReadNextRecord()
-    File-->>Sensor: Return simulated reading
-    Sensor-->>Habitat: Return SensorReading
-    Habitat->>Bus: Publish SystemMessage
-    Bus->>Hub: Forward sensor data
-    Hub-->>Staff: Display updated readings
+    File-->>Sensor: Simulated reading
+    Sensor-->>Habitat: SensorReading
+    Habitat->>Bus: Publish data
+    Bus->>Hub: Forward readings
+    Hub-->>Staff: Update dashboard
+
 ```
 ## Project Team
 
