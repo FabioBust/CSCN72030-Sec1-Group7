@@ -74,6 +74,15 @@ Manual testing will focus on the HMI, navigation, staff controls, warning displa
 - Git / GitHub
 - Visual Studio
 
+## System Architecture
+
+```mermaid
+flowchart TB
+    Staff["Staff HMI"] <--> Hub["Central Hub"]
+    Visitor["Visitor Mode"] <--> Hub
+    Hub <--> Bus["Shared Data Transit Bus"]
+    Bus <--> Habitat["Aquarium Habitats"]
+```
 ## Project Team
 
 **Group 7**  
