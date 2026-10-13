@@ -76,10 +76,14 @@ Manual testing will focus on the HMI, navigation, staff controls, warning displa
 
 ## System Architecture
 
+The following diagram illustrates AquaGuard's system architecture, including the central Hub, shared Data Transit Bus, aquarium habitats, simulated devices, alarm management, and SQLite data logging.
+
 ```mermaid
 flowchart TB
-    Staff["Staff HMI<br/>(Control Panel)"]
-    Visitor["Visitor Mode<br/>(Camera Viewing & Feeding Requests)"]
+    flowchart TB
+    Staff["Staff HMI"]
+
+    Visitor["Visitor Mode"]
 
     Alarm["Alarm Manager"]
     Hub["HUB<br/>(Central SCADA)"]
@@ -90,7 +94,7 @@ flowchart TB
 
     H1["Habitat 1<br/>(Shark Tank)"]
     H2["Habitat 2<br/>(Coral Reef)"]
-    H3["Habitat N<br/>(Jellyfish Tank)"]
+    H3["Habitat 3<br/>(Jellyfish Tank)"]
 
     S1["Sensors<br/>Temperature, pH, Oxygen,<br/>Salinity, Flow"]
     E1["Equipment<br/>Pumps, Filter, Heater/Chiller,<br/>Aerator, Food Dispenser"]
@@ -112,7 +116,7 @@ flowchart TB
     Visitor <--> Hub
 
     Alarm <--> Hub
-    Hub <--> Logger
+    Hub --> Logger
     Logger <--> DB
 
     Hub <--> Bus
@@ -128,12 +132,12 @@ flowchart TB
     H3 <--> S3
     H3 <--> E3
 
-    F1 --> S1
-    F2 --> E1
-    F3 --> S2
-    F4 --> E2
-    F5 --> S3
-    F6 --> E3
+    S1 --> F1
+    E1 --> F2
+    S2 --> F3
+    E2 --> F4
+    S3 --> F5
+    E3 --> F6
 
     classDef central fill:#247bc0,stroke:#125487,color:#fff,stroke-width:2px
     classDef interface fill:#dceeff,stroke:#247bc0,color:#173e5b
