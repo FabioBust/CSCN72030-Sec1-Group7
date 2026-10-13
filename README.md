@@ -324,8 +324,9 @@ VisitorMode --> Hub : visitor data and feeding
 ```
 
 ## Dataflow/Sequence Diagram
-
+# Staff Mode
 ```mermaid
+
 
 %%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
@@ -333,21 +334,66 @@ sequenceDiagram
     participant Hub
     participant Bus as DataTransitBus
     participant Habitat
-    participant Sensor
-    participant File as FileDataProvider
+    participant Equipment
+    participant Alarm as AlarmManager
+    participant Logger as DataLogger
+    participant DB as SQLite
 
-    Staff->>Hub: Request sensor readings
-    Hub->>Bus: Request habitat data
-    Bus->>Habitat: Forward request
-    Habitat->>Sensor: ReadNextValue()
-    Sensor->>File: ReadNextRecord()
-    File-->>Sensor: Simulated reading
-    Sensor-->>Habitat: SensorReading
-    Habitat->>Bus: Publish data
+    Note over Staff,Habitat: Sensor Monitoring
+
+    Habitat->>Bus: Send sensor readings
     Bus->>Hub: Forward readings
+    Hub->>Alarm: Evaluate readings
+    Alarm-->>Hub: Return alarm status
+    Hub->>Logger: Log readings and alarms
+    Logger->>DB: Save data
     Hub-->>Staff: Update dashboard
 
+    Note over Staff,Habitat: Equipment Control
+
+    Staff->>Hub: Request equipment adjustment
+    Hub->>Bus: Send control command
+    Bus->>Habitat: Forward command
+    Habitat->>Equipment: UpdateSettings()
+    Equipment-->>Habitat: Return status
+    Habitat-->>Bus: Send updated status
+    Bus-->>Hub: Forward status
+    Hub-->>Staff: Update dashboard
 ```
+
+# Visitor Mode
+
+```mermaid
+%%{init: {"sequence": {"mirrorActors": false}}}%%
+sequenceDiagram
+    participant Visitor as VisitorMode
+    participant Hub
+    participant Bus as DataTransitBus
+    participant Habitat
+    participant Equipment
+
+    Note over Visitor,Habitat: Camera Viewing
+
+    Visitor->>Hub: Select habitat
+    Hub->>Bus: Request camera feed
+    Bus->>Habitat: Forward request
+    Habitat-->>Bus: Simulated camera feed
+    Bus-->>Hub: Return feed
+    Hub-->>Visitor: Display camera
+
+    Note over Visitor,Habitat: Feeding Request
+
+    Visitor->>Hub: Request feeding
+    Hub->>Hub: Validate donation and feeding limit
+    Hub->>Bus: Send approved feeding command
+    Bus->>Habitat: Forward command
+    Habitat->>Equipment: Activate food dispenser
+    Equipment-->>Habitat: Return feeding status
+    Habitat-->>Bus: Send status
+    Bus-->>Hub: Forward status
+    Hub-->>Visitor: Confirm feeding
+```
+
 ## Project Team
 
 **Group 7**  
