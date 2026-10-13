@@ -150,6 +150,174 @@ flowchart TB
     class S1,E1,S2,E2,S3,E3 device
     class DB,F1,F2,F3,F4,F5,F6 storage
 ```
+
+## Class Diagram
+```mermaid
+    direction TB
+
+class LoginWindow {
+    -AuthenticationService authService
+    +SelectStaffMode() void
+    +SelectVisitorMode() void
+    +SubmitStaffCode(code: string) void
+    +OpenStaffDashboard() void
+    +OpenVisitorMode() void
+    +DisplayLoginError() void
+}
+
+class AuthenticationService {
+    -string staffCodeHash
+    +ValidateStaffCode(code: string) bool
+}
+
+    class StaffMode {
+        -Hub hub
+        +DisplaySensorData() void
+        +DisplayEquipmentStatus() void
+        +DisplayAlarms() void
+        +SendControlCommand() void
+    }
+
+
+    class VisitorMode {
+    -Hub hub
+    +SelectHabitat(habitatId: string) void
+    +ViewCameraFeed() void
+    +RequestFeeding(habitatId: string) bool
+    +DisplayFeedingAvailability() void
+}
+
+    class Hub {
+        -List~Habitat~ habitats
+        -DataTransitBus bus
+        -AlarmManager alarmManager
+        -DataLogger dataLogger
+        +GetHabitat(id: string) Habitat
+        +ProcessMessage(msg: SystemMessage) void
+        +UpdateEquipment(id: string, settings: object) bool
+        +RequestFeeding(habitatId: string) bool
+    }
+
+    class DataLogger {
+        -string databasePath
+        +LogReading(reading: SensorReading) void
+        +LogEquipmentStatus(status: EquipmentStatus) void
+        +LogAlarm(alarm: Alarm) void
+        +LogEvent(message: SystemMessage) void
+        +GetHistory(habitatId: string) void
+    }
+
+    class DataTransitBus {
+        +Publish(message: SystemMessage) void
+        +SendCommand(message: SystemMessage) void
+    }
+
+    class AlarmManager {
+        -List~Alarm~ activeAlarms
+        +Evaluate(reading: SensorReading) void
+        +ResolveAlarm(alarmId: string) void
+        +GetActiveAlarms() List~Alarm~
+    }
+
+    class Habitat {
+        +string habitatId
+        +string name
+        -List~Sensor~ sensors
+        -List~Equipment~ equipment
+        +GetSensors() List~Sensor~
+        +GetEquipment() List~Equipment~
+    }
+
+    class Alarm {
+        +string alarmId
+        +string habitatId
+        +string deviceId
+        +string message
+        +string severity
+        +DateTime timestamp
+        +bool isActive
+    }
+
+    class Sensor {
+        +string deviceId
+        +string habitatId
+        +string parameter
+        +string unit
+        +ReadNextValue() SensorReading
+    }
+
+    class Equipment {
+        +string deviceId
+        +string habitatId
+        +string equipmentType
+        +bool isEnabled
+        +GetStatus() EquipmentStatus
+        +UpdateSettings(settings: object) bool
+    }
+
+    class FileDataProvider {
+        -string filePath
+        -int currentIndex
+        +ReadNextRecord() string
+        +Reset() void
+    }
+
+    class SensorReading {
+        +string deviceId
+        +string habitatId
+        +double value
+        +DateTime timestamp
+    }
+
+    class SystemMessage {
+        +string habitatId
+        +string deviceId
+        +string messageType
+        +string payload
+        +DateTime timestamp
+    }
+
+    class EquipmentStatus {
+        +string deviceId
+        +string habitatId
+        +bool isEnabled
+        +DateTime timestamp
+    }
+
+    %% LOGIN AND AUTHENTICATION
+LoginWindow --> AuthenticationService : validates staff code
+LoginWindow --> StaffMode : opens if authorized
+LoginWindow --> VisitorMode : opens without code
+
+%% USER INTERFACES
+StaffMode --> Hub : staff monitoring and control
+VisitorMode --> Hub : visitor data and feeding
+
+    %% CENTRAL SYSTEM COORDINATION
+    Hub --> DataLogger : requests logging
+    Hub --> DataTransitBus : communicates via
+    Hub --> AlarmManager : requests evaluation
+
+    %% SYSTEM SERVICES
+    DataTransitBus --> Habitat : routes messages
+    DataTransitBus ..> SystemMessage : transports
+    AlarmManager "1" *-- "0..*" Alarm : manages
+
+    %% HABITAT COMPOSITION
+    Habitat "1" *-- "1..*" Sensor : contains
+    Habitat "1" *-- "1..*" Equipment : contains
+
+    %% SIMULATED DEVICE DATA
+    Sensor ..> FileDataProvider : reads data
+    Equipment ..> FileDataProvider : reads status
+
+    %% DEVICE DATA MODELS
+    Sensor ..> SensorReading : produces
+    Equipment ..> EquipmentStatus : produces
+
+    %% MONOCHROME UML STYLING
+    classDef default fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px
+```
 ## Project Team
 
 **Group 7**  
