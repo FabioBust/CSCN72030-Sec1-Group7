@@ -80,6 +80,9 @@ The following diagram illustrates AquaGuard's system architecture, including the
 
 ```mermaid
 flowchart TB
+    Login["Login Window<br/>(Select Staff or Visitor)"]
+    Auth["Authentication Service<br/>(Staff Code Validation)"]
+   
     Staff["Staff HMI"]
 
     Visitor["Visitor Mode"]
@@ -110,6 +113,11 @@ flowchart TB
     F4[("Simulated Data File<br/>(Equipment Status)")]
     F5[("Simulated Data File<br/>(Sensor Readings)")]
     F6[("Simulated Data File<br/>(Equipment Status)")]
+
+    Login -->|"Staff selected"| Auth
+    Auth -->|"Valid code"| Staff
+    Auth -.->|"Invalid code"| Login
+    Login -->|"Visitor selected"| Visitor
 
     Staff <--> Hub
     Visitor <--> Hub
@@ -145,7 +153,7 @@ flowchart TB
     classDef storage fill:#fff0d9,stroke:#b77b29,color:#604017
 
     class Hub,Bus central
-    class Staff,Visitor,Alarm,Logger interface
+    class Login,Auth,Staff,Visitor,Alarm,Logger interface
     class H1,H2,H3 habitat
     class S1,E1,S2,E2,S3,E3 device
     class DB,F1,F2,F3,F4,F5,F6 storage
