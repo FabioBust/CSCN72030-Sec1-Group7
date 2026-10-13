@@ -80,7 +80,6 @@ The following diagram illustrates AquaGuard's system architecture, including the
 
 ```mermaid
 flowchart TB
-    flowchart TB
     Staff["Staff HMI"]
 
     Visitor["Visitor Mode"]
