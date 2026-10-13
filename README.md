@@ -152,7 +152,11 @@ flowchart TB
 ```
 
 ## Class Diagram
+
+The UML class diagram presents AquaGuard’s main classes, attributes, methods, and relationships. It illustrates how the login system, Staff and Visitor Modes, and central Hub interact with the monitoring, control, alarm management, and data logging components, following a modular design based on SOLID principles.
+
 ```mermaid
+classDiagram
     direction TB
 
 class LoginWindow {
