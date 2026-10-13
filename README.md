@@ -322,6 +322,31 @@ VisitorMode --> Hub : visitor data and feeding
     %% MONOCHROME UML STYLING
     classDef default fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px
 ```
+
+## Dataflow/Sequence Diagram
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "actorLineColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "loopTextColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000"}}}%%
+
+sequenceDiagram
+    participant Staff as StaffMode
+    participant Hub
+    participant Bus as DataTransitBus
+    participant Habitat
+    participant Sensor
+    participant File as FileDataProvider
+
+    Staff->>Hub: Request sensor readings
+    Hub->>Bus: Request habitat data
+    Bus->>Habitat: Forward request
+    Habitat->>Sensor: ReadNextValue()
+    Sensor->>File: ReadNextRecord()
+    File-->>Sensor: Return simulated reading
+    Sensor-->>Habitat: Return SensorReading
+    Habitat->>Bus: Publish SystemMessage
+    Bus->>Hub: Forward sensor data
+    Hub-->>Staff: Display updated readings
+```
 ## Project Team
 
 **Group 7**  
