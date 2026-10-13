@@ -332,7 +332,6 @@ The following sequence diagrams illustrate the main interactions between AquaGua
 This sequence diagram illustrates how AquaGuard monitors sensor readings, evaluates alarms, and processes equipment commands through the Hub and DataTransitBus.
 
 ```mermaid
-%%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
     participant Staff as StaffMode
     participant Hub
@@ -370,7 +369,6 @@ sequenceDiagram
 This sequence diagram illustrates how visitors view simulated habitat camera feeds and request feeding through the Hub and DataTransitBus.
 
 ```mermaid
-%%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
     participant Visitor as VisitorMode
     participant Hub
