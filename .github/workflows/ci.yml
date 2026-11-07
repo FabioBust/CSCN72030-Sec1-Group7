@@ -1,0 +1,32 @@
+name: AquaGuard CI
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore AquaGuard.sln
+
+      - name: Build solution
+        run: dotnet build AquaGuard.sln --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test tests/AquaGuard.Tests/AquaGuard.Tests.csproj --configuration Release --no-build --no-restore
