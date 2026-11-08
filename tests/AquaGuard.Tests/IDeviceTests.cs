@@ -1,8 +1,5 @@
-﻿
-using AquaGuard.Devices;
+﻿using AquaGuard.Devices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace AquaGuard.Tests
 {
@@ -12,8 +9,13 @@ namespace AquaGuard.Tests
         [TestMethod]
         public void IDevice_ShouldContainDeviceId()
         {
-            var property = typeof(IDevice).GetProperty("DeviceId");
+            // Arrange
+            var deviceType = typeof(IDevice);
 
+            // Act
+            var property = deviceType.GetProperty(nameof(IDevice.DeviceId));
+
+            // Assert
             Assert.IsNotNull(property);
             Assert.AreEqual(typeof(string), property.PropertyType);
         }
@@ -21,8 +23,13 @@ namespace AquaGuard.Tests
         [TestMethod]
         public void IDevice_ShouldContainHabitatId()
         {
-            var property = typeof(IDevice).GetProperty("HabitatId");
+            // Arrange
+            var deviceType = typeof(IDevice);
 
+            // Act
+            var property = deviceType.GetProperty(nameof(IDevice.HabitatId));
+
+            // Assert
             Assert.IsNotNull(property);
             Assert.AreEqual(typeof(string), property.PropertyType);
         }
@@ -30,8 +37,13 @@ namespace AquaGuard.Tests
         [TestMethod]
         public void IDevice_ShouldContainName()
         {
-            var property = typeof(IDevice).GetProperty("Name");
+            // Arrange
+            var deviceType = typeof(IDevice);
 
+            // Act
+            var property = deviceType.GetProperty(nameof(IDevice.Name));
+
+            // Assert
             Assert.IsNotNull(property);
             Assert.AreEqual(typeof(string), property.PropertyType);
         }

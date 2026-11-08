@@ -11,6 +11,7 @@ namespace AquaGuard.Tests
         [TestMethod]
         public void DeviceTelemetry_ShouldStoreDeviceInformation()
         {
+            // Arrange & Act
             var telemetry = new DeviceTelemetry
             {
                 HabitatId = "H001",
@@ -19,6 +20,7 @@ namespace AquaGuard.Tests
                 Timestamp = DateTime.UtcNow
             };
 
+            // Assert
             Assert.AreEqual("H001", telemetry.HabitatId);
             Assert.AreEqual("TEMP001", telemetry.DeviceId);
             Assert.AreEqual("25.5", telemetry.Value);
@@ -27,8 +29,10 @@ namespace AquaGuard.Tests
         [TestMethod]
         public void DeviceTelemetry_ShouldStoreTimestamp()
         {
+            // Arrange
             DateTime timestamp = DateTime.UtcNow;
-
+            
+            // Act
             var telemetry = new DeviceTelemetry
             {
                 HabitatId = "H001",
@@ -37,6 +41,7 @@ namespace AquaGuard.Tests
                 Timestamp = timestamp
             };
 
+            // Assert
             Assert.AreEqual(timestamp, telemetry.Timestamp);
         }
     }
