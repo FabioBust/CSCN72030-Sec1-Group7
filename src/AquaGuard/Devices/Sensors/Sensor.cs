@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using AquaGuard.Devices;
 
 namespace AquaGuard.Devices.Sensors
 {
-    internal class Sensor
+    public abstract class Sensor : DeviceBase
     {
+        protected Sensor(
+            string deviceId,
+            string habitatId,
+            string name)
+            : base(deviceId, habitatId, name)
+        {
+        }
     }
 }
