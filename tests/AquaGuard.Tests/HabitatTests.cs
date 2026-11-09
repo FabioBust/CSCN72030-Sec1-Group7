@@ -139,6 +139,44 @@ namespace AquaGuard.Tests
                 habitat.GetEquipment("EQ001"));
         }
 
+        [TestMethod]
+        public void Habitat_ShouldRejectEquipmentFromDifferentHabitat()
+        {
+            var habitat = new Habitat("HAB001", "Coral Reef");
+
+            var equipment = new TestEquipment(
+                "EQ001", "HAB002", "Water Pump");
+
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                habitat.AddEquipment(equipment));
+        }
+
+        [TestMethod]
+        public void Habitat_ShouldRejectDuplicateEquipmentId()
+        {
+            var habitat = new Habitat("HAB001", "Coral Reef");
+
+            var equipment1 = new TestEquipment(
+                "EQ001", "HAB001", "Water Pump");
+
+            var equipment2 = new TestEquipment(
+                "EQ001", "HAB001", "Water Filter");
+
+            habitat.AddEquipment(equipment1);
+
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                habitat.AddEquipment(equipment2));
+        }
+
+        [TestMethod]
+        public void Habitat_ShouldRejectNullEquipment()
+        {
+            var habitat = new Habitat("HAB001", "Coral Reef");
+
+            Assert.ThrowsExactly<ArgumentNullException>(() =>
+                habitat.AddEquipment(null!));
+        }
+
 
     }
 }
