@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections.Generic;
+using AquaGuard.Devices;
 using System;
 
 namespace AquaGuard.Core
@@ -7,6 +8,7 @@ namespace AquaGuard.Core
     {
         public string HabitatId { get; }
         public string Name { get; }
+        private readonly Dictionary<string, IDevice> _sensors = new();
 
         public Habitat(string habitatId, string name)
         {
@@ -27,5 +29,26 @@ namespace AquaGuard.Core
             HabitatId = habitatId;
             Name = name;
         }
+
+        public void AddSensor(IDevice sensor)
+        {
+            if (sensor == null)
+                throw new ArgumentNullException(nameof(sensor));
+
+            if (sensor.HabitatId != HabitatId)
+                throw new ArgumentException(
+                    "Sensor belongs to a different habitat.",
+                    nameof(sensor));
+
+            _sensors.Add(sensor.DeviceId, sensor);
+        }
+
+        public IDevice? GetSensor(string deviceId)
+        {
+            return _sensors.TryGetValue(deviceId, out var sensor)
+                ? sensor
+                : null;
+        }
+
     }
 }
