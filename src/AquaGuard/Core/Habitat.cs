@@ -9,7 +9,7 @@ namespace AquaGuard.Core
         public string HabitatId { get; }
         public string Name { get; }
         private readonly Dictionary<string, IDevice> _sensors = new();
-
+        private readonly Dictionary<string, IDevice> _equipment = new();
         public Habitat(string habitatId, string name)
         {
             if (string.IsNullOrWhiteSpace(habitatId))
@@ -49,6 +49,28 @@ namespace AquaGuard.Core
                 ? sensor
                 : null;
         }
+
+        public void AddEquipment(IDevice equipment)
+        {
+            if (equipment == null)
+                throw new ArgumentNullException(nameof(equipment));
+
+            if (equipment.HabitatId != HabitatId)
+                throw new ArgumentException(
+                    "Equipment belongs to a different habitat.",
+                    nameof(equipment));
+
+            _equipment.Add(equipment.DeviceId, equipment);
+        }
+
+        public IDevice? GetEquipment(string deviceId)
+        {
+            return _equipment.TryGetValue(
+                deviceId, out var equipment)
+                ? equipment
+                : null;
+        }
+
 
     }
 }

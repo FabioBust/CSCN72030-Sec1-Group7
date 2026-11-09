@@ -27,6 +27,24 @@ namespace AquaGuard.Tests
             }
         }
 
+        private class TestEquipment : IDevice
+        {
+            public string DeviceId { get; }
+            public string HabitatId { get; }
+            public string Name { get; }
+
+            public TestEquipment(
+                string deviceId,
+                string habitatId,
+                string name)
+            {
+                DeviceId = deviceId;
+                HabitatId = habitatId;
+                Name = name;
+            }
+        }
+
+
         [TestMethod]
         public void Habitat_ShouldStoreIdAndName()
         {
@@ -100,6 +118,27 @@ namespace AquaGuard.Tests
             Assert.ThrowsExactly<ArgumentNullException>(() =>
                 habitat.AddSensor(null!));
         }
+
+        [TestMethod]
+        public void Habitat_ShouldRegisterAndRetrieveEquipment()
+        {
+            // Arrange
+            var habitat = new Habitat("HAB001", "Coral Reef");
+
+            var equipment = new TestEquipment(
+                "EQ001",
+                "HAB001",
+                "Water Pump");
+
+            // Act
+            habitat.AddEquipment(equipment);
+
+            // Assert
+            Assert.AreSame(
+                equipment,
+                habitat.GetEquipment("EQ001"));
+        }
+
 
     }
 }
