@@ -1,10 +1,14 @@
 ﻿
 using System;
+using System.Globalization;
+using AquaGuard.Data;
 
 namespace AquaGuard.Devices.Sensors
 {
     public class TemperatureSensor : Sensor
     {
+        private readonly FileDataProvider _dataProvider;
+
         public const string Unit = "°C";
 
         public double? CurrentTemperature { get; private set; }
@@ -14,9 +18,12 @@ namespace AquaGuard.Devices.Sensors
         public TemperatureSensor(
             string deviceId,
             string habitatId,
-            string name)
+            string name,
+            FileDataProvider dataProvider)
             : base(deviceId, habitatId, name)
         {
+            _dataProvider = dataProvider
+                ?? throw new ArgumentNullException(nameof(dataProvider));
         }
 
         public void UpdateReading(double? temperature)
@@ -30,6 +37,24 @@ namespace AquaGuard.Devices.Sensors
             }
 
             CurrentTemperature = temperature;
+        }
+
+        public void ReadNextReading()
+        {
+            string? record = _dataProvider.ReadNextRecord();
+
+            if (!double.TryParse(
+                    record,
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out double temperature)
+                || !double.IsFinite(temperature))
+            {
+                UpdateReading(null);
+                return;
+            }
+
+            UpdateReading(temperature);
         }
     }
 }
