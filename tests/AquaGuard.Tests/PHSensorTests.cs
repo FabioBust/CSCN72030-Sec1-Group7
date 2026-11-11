@@ -60,6 +60,49 @@ namespace AquaGuard.Tests
                 () => sensor.UpdateReading(15.0));
         }
 
+        [TestMethod]
+        public void PHSensor_ShouldAcceptPHZero()
+        {
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            sensor.UpdateReading(0.0);
+
+            Assert.AreEqual(0.0, sensor.CurrentPH);
+        }
+
+        [TestMethod]
+        public void PHSensor_ShouldAcceptPHFourteen()
+        {
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            sensor.UpdateReading(14.0);
+
+            Assert.AreEqual(14.0, sensor.CurrentPH);
+        }
+
+        [TestMethod]
+        public void PHSensor_ShouldRejectNaN()
+        {
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => sensor.UpdateReading(double.NaN));
+        }
+
+        [TestMethod]
+        public void PHSensor_ShouldRejectInfinity()
+        {
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => sensor.UpdateReading(double.PositiveInfinity));
+        }
+
+
 
     }
 }
