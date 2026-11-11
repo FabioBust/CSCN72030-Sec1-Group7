@@ -101,5 +101,41 @@ namespace AquaGuard.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(
                 () => sensor.UpdateReading(double.PositiveInfinity));
         }
+
+
+        [TestMethod]
+        public void PHSensor_ShouldGenerateTelemetry()
+        {
+            // Arrange
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            sensor.UpdateReading(7.2);
+
+            // Act
+            var telemetry = sensor.GetTelemetry();
+
+            // Assert
+            Assert.AreEqual("PH001", telemetry.DeviceId);
+            Assert.AreEqual("HAB001", telemetry.HabitatId);
+            Assert.AreEqual("7.2", telemetry.Value);
+
+            Assert.IsTrue(telemetry.Timestamp <= DateTime.UtcNow);
+            Assert.IsTrue(
+                telemetry.Timestamp > DateTime.UtcNow.AddMinutes(-1));
+        }
+
+        [TestMethod]
+        public void PHSensor_ShouldRejectTelemetryWithoutReading()
+        {
+            // Arrange
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => sensor.GetTelemetry());
+        }
+
     }
 }

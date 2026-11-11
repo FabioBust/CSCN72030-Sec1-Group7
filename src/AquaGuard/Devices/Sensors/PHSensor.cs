@@ -1,4 +1,8 @@
-﻿using AquaGuard.Devices;
+﻿using System;
+using System.Globalization;
+using AquaGuard.Devices;
+using AquaGuard.Models;
+using AquaGuard.Devices;
 
 namespace AquaGuard.Devices.Sensors
 {
@@ -30,7 +34,25 @@ namespace AquaGuard.Devices.Sensors
             CurrentPH = phValue;
         }
 
-        
+
+        public DeviceTelemetry GetTelemetry()
+        {
+            if (!CurrentPH.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "No pH reading is available.");
+            }
+
+            return new DeviceTelemetry
+            {
+                DeviceId = DeviceId,
+                HabitatId = HabitatId,
+                Value = CurrentPH.Value.ToString(
+                    CultureInfo.InvariantCulture),
+                Timestamp = DateTime.UtcNow
+            };
+        }
+
 
 
     }
