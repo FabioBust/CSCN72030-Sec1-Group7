@@ -15,9 +15,21 @@ namespace AquaGuard.Devices.Sensors
         {
         }
 
+
         public void UpdateReading(double phValue)
         {
+            if (double.IsNaN(phValue) ||
+                double.IsInfinity(phValue) ||
+                phValue < 0 ||
+                phValue > 14)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(phValue),
+                    "pH value must be between 0 and 14.");
+            }
+
             CurrentPH = phValue;
         }
+
     }
 }

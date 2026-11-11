@@ -36,5 +36,30 @@ namespace AquaGuard.Tests
             Assert.AreEqual(7.2, sensor.CurrentPH);
         }
 
+        [TestMethod]
+        public void PHSensor_ShouldRejectPHBelowZero()
+        {
+            // Arrange
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => sensor.UpdateReading(-1.0));
+        }
+
+        [TestMethod]
+        public void PHSensor_ShouldRejectPHAboveFourteen()
+        {
+            // Arrange
+            var sensor = new PHSensor(
+                "PH001", "HAB001", "pH Sensor");
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => sensor.UpdateReading(15.0));
+        }
+
+
     }
 }
