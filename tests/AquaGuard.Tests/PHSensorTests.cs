@@ -101,8 +101,5 @@ namespace AquaGuard.Tests
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(
                 () => sensor.UpdateReading(double.PositiveInfinity));
         }
-
-
-
     }
 }

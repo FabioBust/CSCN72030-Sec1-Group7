@@ -1,5 +1,4 @@
-﻿
-using AquaGuard.Devices;
+﻿using AquaGuard.Devices;
 
 namespace AquaGuard.Devices.Sensors
 {
@@ -30,6 +29,9 @@ namespace AquaGuard.Devices.Sensors
 
             CurrentPH = phValue;
         }
+
+        
+
 
     }
 }
