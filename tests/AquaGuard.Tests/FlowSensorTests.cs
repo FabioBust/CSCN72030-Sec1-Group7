@@ -52,6 +52,82 @@ namespace AquaGuard.Tests
                 () => sensor.UpdateReading(-5.0));
         }
 
+        [TestMethod]
+        public void FlowSensor_ShouldAcceptZeroFlowRate()
+        {
+            // Arrange
+            var sensor = new FlowSensor(
+                "FLOW001", "HAB001", "Water Flow Sensor");
+
+            // Act
+            sensor.UpdateReading(0.0);
+
+            // Assert
+            Assert.AreEqual(0.0, sensor.CurrentFlowRate);
+        }
+
+        [TestMethod]
+        public void FlowSensor_ShouldRejectNaN()
+        {
+            // Arrange
+            var sensor = new FlowSensor(
+                "FLOW001", "HAB001", "Water Flow Sensor");
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => sensor.UpdateReading(double.NaN));
+        }
+
+        [TestMethod]
+        public void FlowSensor_ShouldRejectInfinity()
+        {
+            // Arrange
+            var sensor = new FlowSensor(
+                "FLOW001", "HAB001", "Water Flow Sensor");
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => sensor.UpdateReading(double.PositiveInfinity));
+        }
+
+        [TestMethod]
+        public void FlowSensor_ShouldGenerateTelemetry()
+        {
+            // Arrange
+            var sensor = new FlowSensor(
+                "FLOW001",
+                "HAB001",
+                "Water Flow Sensor");
+
+            sensor.UpdateReading(25.5);
+
+            // Act
+            var telemetry = sensor.GetTelemetry();
+
+            // Assert
+            Assert.AreEqual("FLOW001", telemetry.DeviceId);
+            Assert.AreEqual("HAB001", telemetry.HabitatId);
+            Assert.AreEqual("25.5", telemetry.Value);
+
+            Assert.IsTrue(telemetry.Timestamp <= DateTime.UtcNow);
+            Assert.IsTrue(
+                telemetry.Timestamp > DateTime.UtcNow.AddMinutes(-1));
+        }
+
+        [TestMethod]
+        public void FlowSensor_ShouldRejectTelemetryWithoutReading()
+        {
+            // Arrange
+            var sensor = new FlowSensor(
+                "FLOW001",
+                "HAB001",
+                "Water Flow Sensor");
+
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => sensor.GetTelemetry());
+        }
+
 
     }
 }

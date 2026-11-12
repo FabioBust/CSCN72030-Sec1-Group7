@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using AquaGuard.Devices;
-
+using AquaGuard.Models;
 namespace AquaGuard.Devices.Sensors
 {
     public class FlowSensor : DeviceBase
@@ -29,6 +30,24 @@ namespace AquaGuard.Devices.Sensors
             }
 
             CurrentFlowRate = flowRate;
+        }
+
+        public DeviceTelemetry GetTelemetry()
+        {
+            if (!CurrentFlowRate.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "No flow rate reading is available.");
+            }
+
+            return new DeviceTelemetry
+            {
+                DeviceId = DeviceId,
+                HabitatId = HabitatId,
+                Value = CurrentFlowRate.Value.ToString(
+                    CultureInfo.InvariantCulture),
+                Timestamp = DateTime.UtcNow
+            };
         }
 
     }
