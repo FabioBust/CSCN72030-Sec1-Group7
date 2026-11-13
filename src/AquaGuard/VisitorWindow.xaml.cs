@@ -8,5 +8,13 @@ namespace AquaGuard
         {
             InitializeComponent();
         }
+
+        private void BackToLogin(object sender, RoutedEventArgs e)
+        {
+            var login = new LoginWindow();
+            Application.Current.MainWindow = login;
+            login.Show();
+            Close();
+        }
     }
 }

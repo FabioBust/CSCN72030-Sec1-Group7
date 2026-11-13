@@ -21,7 +21,7 @@ namespace AquaGuard
 
         private void SubmitStaffCode(object sender, RoutedEventArgs e)
         {
-            bool valid = authentication.ValidateStaffCode(StaffCode.Password);
+            bool valid = authentication.TrySignIn(StaffCode.Password);
             StaffCode.Clear();
             if (valid)
             {

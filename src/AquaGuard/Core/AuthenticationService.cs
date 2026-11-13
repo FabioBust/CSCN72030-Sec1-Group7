@@ -17,6 +17,22 @@ namespace AquaGuard.Core
 
         public bool IsConfigured => staffCodeHash is not null;
 
+        private bool isStaff;
+
+        public bool TrySignIn(string? code)
+        {
+            isStaff = ValidateStaffCode(code);
+            return isStaff;
+        }
+
+        internal void RequireStaff()
+        {
+            if (!isStaff)
+            {
+                throw new UnauthorizedAccessException("Staff sign-in is required.");
+            }
+        }
+
         public bool ValidateStaffCode(string? code)
         {
             return staffCodeHash is not null

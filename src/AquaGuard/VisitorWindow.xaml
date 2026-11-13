@@ -5,5 +5,7 @@
         WindowStartupLocation="CenterScreen">
     <StackPanel Margin="28">
         <TextBlock Text="Visitor Mode" FontSize="24"/>
+        <Button Content="_Back to mode selection" Click="BackToLogin"
+                HorizontalAlignment="Left" Padding="8" Margin="0,16,0,0"/>
     </StackPanel>
 </Window>
