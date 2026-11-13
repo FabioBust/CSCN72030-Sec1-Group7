@@ -9,6 +9,9 @@
         <StackPanel x:Name="StaffCodePanel" Visibility="Collapsed" Margin="0,16,0,0">
             <Label Content="Staff _code" Target="{Binding ElementName=StaffCode}"/>
             <PasswordBox x:Name="StaffCode" Padding="6"/>
+            <Button Content="_Sign in" Click="SubmitStaffCode" IsDefault="True" Padding="8" Margin="0,8,0,0"/>
+            <TextBlock x:Name="LoginError" Foreground="Firebrick" TextWrapping="Wrap" Margin="0,8,0,0"
+                       AutomationProperties.LiveSetting="Polite"/>
         </StackPanel>
     </StackPanel>
 </Window>
