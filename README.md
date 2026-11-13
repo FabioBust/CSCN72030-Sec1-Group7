@@ -58,6 +58,14 @@ AquaGuard will use SQLite to store important system information such as:
 - Control changes
 - System events
 
+## Simulated sensor files
+
+Set `AQUAGUARD_SENSOR_DATA_DIRECTORY` before launching the app. Put each habitat in
+a subdirectory and each sensor in a `.txt` file named after its device ID, such as
+`reef/temperature.txt`. Use one invariant-culture number per line. The staff
+dashboard discovers the files when it opens and polls them once per second.
+Keep an empty file for a known sensor whose data is unavailable.
+
 ## Testing
 
 The project will use both automated and manual testing.

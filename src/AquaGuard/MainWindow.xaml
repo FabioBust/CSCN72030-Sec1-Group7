@@ -2,7 +2,17 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AquaGuard | Staff Dashboard" Height="450" Width="800">
-    <StackPanel Margin="28">
-        <TextBlock Text="Staff Dashboard" FontSize="24"/>
-    </StackPanel>
+    <DockPanel Margin="28">
+        <TextBlock DockPanel.Dock="Top" Text="Staff Dashboard" FontSize="24" Margin="0,0,0,16"/>
+        <TextBlock x:Name="SensorStatus" DockPanel.Dock="Top" Margin="0,0,0,8"/>
+        <ListView x:Name="SensorReadings">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Habitat" DisplayMemberBinding="{Binding HabitatId}" Width="170"/>
+                    <GridViewColumn Header="Sensor" DisplayMemberBinding="{Binding DeviceId}" Width="230"/>
+                    <GridViewColumn Header="Reading" DisplayMemberBinding="{Binding Reading}" Width="150"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
 </Window>
