@@ -11,9 +11,13 @@ namespace AquaGuard
         private readonly SensorMonitor monitor = new();
         private readonly DispatcherTimer refresh = new() { Interval = TimeSpan.FromSeconds(1) };
 
-        public MainWindow()
+        private readonly Hub hub;
+
+        public MainWindow(AuthenticationService authentication)
         {
+            authentication.RequireStaff();
             InitializeComponent();
+            hub = new Hub(authentication, new DataTransitBus(), []);
             LoadSources(Environment.GetEnvironmentVariable("AQUAGUARD_SENSOR_DATA_DIRECTORY"));
             refresh.Tick += (_, _) => ShowReadings();
             Loaded += (_, _) =>
@@ -54,7 +58,7 @@ namespace AquaGuard
 
         private void ShowReadings()
         {
-            var readings = monitor.Poll();
+            var readings = hub.PollSensors(monitor);
             SensorReadings.ItemsSource = readings;
             if (readings.Count == 0 && string.IsNullOrEmpty(SensorStatus.Text))
             {

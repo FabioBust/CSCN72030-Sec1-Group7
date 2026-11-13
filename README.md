@@ -58,6 +58,20 @@ AquaGuard will use SQLite to store important system information such as:
 - Control changes
 - System events
 
+## Staff access
+
+Set `AQUAGUARD_STAFF_CODE_SHA256` to the 64-character hexadecimal SHA-256 digest
+of the UTF-8 staff code before launching AquaGuard. Staff sign-in is disabled if
+the digest is missing or malformed. Visitor Mode is available without a code.
+
+## Hub integration
+
+The Hub routes equipment power commands to the registered habitat and device.
+The Data Transit Bus publishes sensor readings and equipment state with habitat
+ID, device ID, value/state, and timestamp. A missing sensor reading carries a
+null value. Feeding requests require a staff session and a feeding handler.
+The application does not yet register a physical or simulated feeder.
+
 ## Simulated sensor files
 
 Set `AQUAGUARD_SENSOR_DATA_DIRECTORY` before launching the app. Put each habitat in

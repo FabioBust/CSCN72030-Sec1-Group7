@@ -25,7 +25,7 @@ namespace AquaGuard
             StaffCode.Clear();
             if (valid)
             {
-                NavigateTo(new MainWindow());
+                NavigateTo(new MainWindow(authentication));
                 return;
             }
 
