@@ -1,10 +1,95 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using AquaGuard.Models;
 
 namespace AquaGuard.Core
 {
-    internal class Hub
+    public sealed class Hub
     {
+        private readonly AuthenticationService authentication;
+        private readonly EquipmentControlService controls;
+        private readonly DataTransitBus bus;
+        private readonly Dictionary<string, Habitat> habitats;
+        private readonly Func<Habitat, bool>? handleFeeding;
+        private readonly Dictionary<(string, string), Func<double?>> sensorInputs = new();
+
+        public DataTransitBus Bus => bus;
+
+        public void RegisterHabitat(Habitat habitat)
+        {
+            ArgumentNullException.ThrowIfNull(habitat);
+            habitats.Add(habitat.HabitatId, habitat);
+        }
+
+        public void RegisterSensorInput(string habitatId, string deviceId, Func<double?> read)
+        {
+            ArgumentNullException.ThrowIfNull(read);
+            if (GetHabitat(habitatId).GetSensor(deviceId) is null)
+                throw new KeyNotFoundException($"Unknown sensor '{deviceId}'.");
+            sensorInputs.Add((habitatId, deviceId), read);
+        }
+
+        public IReadOnlyList<SensorDisplay> PollHabitatSensors()
+        {
+            var readings = new List<SensorDisplay>();
+            foreach (var habitat in habitats.Values)
+            foreach (var sensor in habitat.Sensors)
+            {
+                double? value = sensorInputs.TryGetValue((habitat.HabitatId, sensor.DeviceId), out var read)
+                    ? read() : null;
+                var display = new SensorDisplay(habitat.HabitatId, sensor.DeviceId, value);
+                readings.Add(display);
+                bus.Publish(new SystemMessage(TelemetryKind.SensorReading, display.HabitatId,
+                    display.DeviceId, value.HasValue ? display.Reading : null, DateTime.UtcNow));
+            }
+            return readings;
+        }
+
+        public Hub(AuthenticationService authentication, DataTransitBus bus,
+            IEnumerable<Habitat> habitats, Func<Habitat, bool>? handleFeeding = null)
+        {
+            this.authentication = authentication;
+            this.bus = bus;
+            this.habitats = habitats.ToDictionary(habitat => habitat.HabitatId);
+            this.handleFeeding = handleFeeding;
+            controls = new EquipmentControlService(authentication);
+        }
+
+        public void PublishSensorReading(DeviceTelemetry reading)
+        {
+            ArgumentNullException.ThrowIfNull(reading);
+            bus.Publish(new SystemMessage(TelemetryKind.SensorReading, reading.HabitatId,
+                reading.DeviceId, reading.Value, reading.Timestamp));
+        }
+
+        public IReadOnlyList<SensorDisplay> PollSensors(SensorMonitor monitor)
+        {
+            var readings = monitor.Poll();
+            foreach (var reading in readings)
+            {
+                bus.Publish(new SystemMessage(TelemetryKind.SensorReading, reading.HabitatId,
+                    reading.DeviceId, reading.Value.HasValue ? reading.Reading : null, DateTime.UtcNow));
+            }
+
+            return readings;
+        }
+
+        public void SetEquipmentPower(string habitatId, string deviceId, bool isOn)
+        {
+            authentication.RequireStaff();
+            bus.SendEquipmentCommand(controls, GetHabitat(habitatId), deviceId, isOn);
+        }
+
+        public bool RequestFeeding(string habitatId)
+        {
+            authentication.RequireStaff();
+            Habitat habitat = GetHabitat(habitatId);
+            return handleFeeding is not null && bus.SendFeedingRequest(habitat, handleFeeding);
+        }
+
+        private Habitat GetHabitat(string habitatId)
+        {
+            return habitats.TryGetValue(habitatId, out var habitat)
+                ? habitat
+                : throw new KeyNotFoundException($"Unknown habitat '{habitatId}'.");
+        }
     }
 }
