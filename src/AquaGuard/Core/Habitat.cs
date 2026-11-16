@@ -10,6 +10,8 @@ namespace AquaGuard.Core
         public string Name { get; }
         private readonly Dictionary<string, IDevice> _sensors = new();
         private readonly Dictionary<string, IDevice> _equipment = new();
+        public IReadOnlyCollection<IDevice> Sensors => _sensors.Values;
+
         public Habitat(string habitatId, string name)
         {
             if (string.IsNullOrWhiteSpace(habitatId))
