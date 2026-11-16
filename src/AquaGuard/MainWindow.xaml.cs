@@ -37,14 +37,7 @@ namespace AquaGuard
 
             try
             {
-                foreach (string habitat in Directory.GetDirectories(root))
-                {
-                    foreach (string file in Directory.GetFiles(habitat, "*.txt"))
-                    {
-                        monitor.AddSource(Path.GetFileName(habitat), Path.GetFileNameWithoutExtension(file),
-                            new FileDataProvider(file));
-                    }
-                }
+                HabitatFileSources.Load(hub, root);
             }
             catch (IOException)
             {
@@ -58,7 +51,7 @@ namespace AquaGuard
 
         private void ShowReadings()
         {
-            var readings = hub.PollSensors(monitor);
+            var readings = hub.PollHabitatSensors();
             SensorReadings.ItemsSource = readings;
             if (readings.Count == 0 && string.IsNullOrEmpty(SensorStatus.Text))
             {
