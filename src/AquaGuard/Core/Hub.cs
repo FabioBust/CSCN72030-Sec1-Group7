@@ -9,6 +9,39 @@ namespace AquaGuard.Core
         private readonly DataTransitBus bus;
         private readonly Dictionary<string, Habitat> habitats;
         private readonly Func<Habitat, bool>? handleFeeding;
+        private readonly Dictionary<(string, string), Func<double?>> sensorInputs = new();
+
+        public DataTransitBus Bus => bus;
+
+        public void RegisterHabitat(Habitat habitat)
+        {
+            ArgumentNullException.ThrowIfNull(habitat);
+            habitats.Add(habitat.HabitatId, habitat);
+        }
+
+        public void RegisterSensorInput(string habitatId, string deviceId, Func<double?> read)
+        {
+            ArgumentNullException.ThrowIfNull(read);
+            if (GetHabitat(habitatId).GetSensor(deviceId) is null)
+                throw new KeyNotFoundException($"Unknown sensor '{deviceId}'.");
+            sensorInputs.Add((habitatId, deviceId), read);
+        }
+
+        public IReadOnlyList<SensorDisplay> PollHabitatSensors()
+        {
+            var readings = new List<SensorDisplay>();
+            foreach (var habitat in habitats.Values)
+            foreach (var sensor in habitat.Sensors)
+            {
+                double? value = sensorInputs.TryGetValue((habitat.HabitatId, sensor.DeviceId), out var read)
+                    ? read() : null;
+                var display = new SensorDisplay(habitat.HabitatId, sensor.DeviceId, value);
+                readings.Add(display);
+                bus.Publish(new SystemMessage(TelemetryKind.SensorReading, display.HabitatId,
+                    display.DeviceId, value.HasValue ? display.Reading : null, DateTime.UtcNow));
+            }
+            return readings;
+        }
 
         public Hub(AuthenticationService authentication, DataTransitBus bus,
             IEnumerable<Habitat> habitats, Func<Habitat, bool>? handleFeeding = null)
