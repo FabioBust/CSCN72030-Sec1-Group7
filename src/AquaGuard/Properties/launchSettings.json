@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AquaGuard": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "AQUAGUARD_STAFF_CODE_SHA256": "EEC2433022076B8ADC035673F7E27276F840F3F1B338D2670603C9E88CAE9499"
+      }
+    }
+  }
+}
