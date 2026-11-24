@@ -85,3 +85,16 @@ habitat with a 23.5 °C reading and a fresh SQLite database.
 
 The smoke test covered these specific cases. The remaining manual system and
 participant usability cases still require execution.
+
+## Additional manual checks
+
+Used the Release app with synthetic kelp and reef habitats and a fresh SQLite
+database. Kelp reported 17.5 °C. Reef reported 23.5 °C with an empty oxygen file.
+
+| Case | Status | Evidence or remaining work |
+| --- | --- | --- |
+| S01 | Functional checks passed | Invalid Staff code displayed an error. The valid code opened the Staff dashboard. Visitor Mode opened without a code. The UXR07 participant timing check remains unrun. |
+| S02 | Partial | Switching from kelp to reef replaced the sensor rows. Reef temperature was 23.5 °C and oxygen displayed No Data while temperature remained visible. Units, classification, equipment status, live outage/recovery and timing were not verified here. |
+| I04 | Passed for the two-habitat workflow | Only reef was enabled by Staff. Visitor feeding was unavailable in kelp. Reef dispensed one portion and disabled the button. After closing the app, a separate SQLite connection found exactly one event for reef/food-dispenser. |
+| S05 | Partial | The persisted feeding row was verified independently. Full event-type coverage and Staff history retrieval remain blocked on integration. |
+| UXR01–UXR07 | Participant sessions unrun | The functional smoke checks supply no participant completion-rate or timing evidence. |
