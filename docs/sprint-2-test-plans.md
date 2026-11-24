@@ -98,3 +98,13 @@ database. Kelp reported 17.5 °C. Reef reported 23.5 °C with an empty oxygen fi
 | I04 | Passed for the two-habitat workflow | Only reef was enabled by Staff. Visitor feeding was unavailable in kelp. Reef dispensed one portion and disabled the button. After closing the app, a separate SQLite connection found exactly one event for reef/food-dispenser. |
 | S05 | Partial | The persisted feeding row was verified independently. Full event-type coverage and Staff history retrieval remain blocked on integration. |
 | UXR01–UXR07 | Participant sessions unrun | The functional smoke checks supply no participant completion-rate or timing evidence. |
+
+## Sensor recovery and database failure checks
+
+- S02/I01 recovery subset passed. With the Staff dashboard open, removed the
+  synthetic reef oxygen file. Oxygen changed from 7.2 to No Data while
+  temperature remained 23.5. Restored the file and observed oxygen return to 7.2
+  without restarting the app. The three-second threshold was not timed.
+- I05 heater write-failure subset passed. Pointed the SQLite path at a directory
+  and attempted to apply a valid 22.5 °C heater target. The app displayed a
+  logging error. Returning to Staff Mode confirmed that the target remained unset.
