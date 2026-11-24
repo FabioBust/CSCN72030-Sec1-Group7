@@ -1,4 +1,7 @@
 using AquaGuard.Models;
+using AquaGuard.Data;
+using AquaGuard.Devices.Equipment;
+using System.Globalization;
 
 namespace AquaGuard.Core
 {
@@ -12,6 +15,7 @@ namespace AquaGuard.Core
         private readonly Dictionary<(string, string), Func<double?>> sensorInputs = new();
 
         public DataTransitBus Bus => bus;
+        public IReadOnlyCollection<Habitat> Habitats => habitats.Values;
 
         public void RegisterHabitat(Habitat habitat)
         {
@@ -83,6 +87,33 @@ namespace AquaGuard.Core
             authentication.RequireStaff();
             Habitat habitat = GetHabitat(habitatId);
             return handleFeeding is not null && bus.SendFeedingRequest(habitat, handleFeeding);
+        }
+
+        internal void SetHeaterTarget(string habitatId, string deviceId, decimal target, DataLogger logger)
+        {
+            authentication.RequireStaff();
+            if (GetHabitat(habitatId).GetEquipment(deviceId) is not HeaterChiller heater)
+                throw new InvalidOperationException("No heater/chiller matches the device ID.");
+
+            HeaterChiller.ValidateTarget(target);
+            if (heater.TargetTemperature == target)
+                return;
+
+            string value = target.ToString("0.0", CultureInfo.InvariantCulture);
+            logger.LogEquipmentSetting(habitatId, deviceId, "target_temperature_c", value);
+            heater.SetTargetTemperature(target);
+            bus.Publish(new SystemMessage(TelemetryKind.EquipmentState, habitatId, deviceId, value, DateTime.UtcNow));
+        }
+
+        public bool CanFeed(string habitatId)
+        {
+            return GetHabitat(habitatId).Equipment.OfType<FoodDispenser>().SingleOrDefault()?.CanFeed == true;
+        }
+
+        public bool RequestVisitorFeeding(string habitatId, decimal simulatedDonationCad)
+        {
+            return GetHabitat(habitatId).Equipment.OfType<FoodDispenser>().SingleOrDefault()
+                ?.TryDispense(simulatedDonationCad) == true;
         }
 
         private Habitat GetHabitat(string habitatId)

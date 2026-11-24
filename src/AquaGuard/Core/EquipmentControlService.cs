@@ -19,6 +19,9 @@ namespace AquaGuard.Core
                     if (isOn) filter.TurnOn();
                     else filter.TurnOff();
                     break;
+                case Devices.Equipment.FoodDispenser dispenser:
+                    dispenser.SetEnabled(isOn);
+                    break;
                 default:
                     throw new InvalidOperationException("No controllable equipment matches the device ID.");
             }
