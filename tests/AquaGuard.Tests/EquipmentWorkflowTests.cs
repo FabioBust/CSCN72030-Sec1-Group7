@@ -65,6 +65,28 @@ public sealed class EquipmentWorkflowTests
     }
 
     [TestMethod]
+    public void HeaterWriteFailurePreservesTargetAndDoesNotPublishChange()
+    {
+        var habitat = new Habitat("reef", "Reef");
+        var heater = new HeaterChiller("heater", "reef", "Heater");
+        heater.SetTargetTemperature(22.5m);
+        habitat.AddEquipment(heater);
+        var bus = new DataTransitBus();
+        var published = new List<string?>();
+        bus.TelemetryReceived += message => published.Add(message.Value);
+        var hub = new Hub(auth, bus, [habitat]);
+        Assert.IsTrue(auth.TrySignIn("test-code"));
+
+        // SQLite cannot open a database when the configured filename is a directory.
+        var logger = new DataLogger(AppContext.BaseDirectory);
+        Assert.ThrowsExactly<SqliteException>(
+            () => hub.SetHeaterTarget("reef", "heater", 23m, logger));
+
+        Assert.AreEqual(22.5m, heater.TargetTemperature);
+        Assert.HasCount(0, published);
+    }
+
+    [TestMethod]
     public void DispenserUsesPersistedCooldownAndExcludesFeedingsExactly24HoursOld()
     {
         string folder = Directory.CreateTempSubdirectory("aquaguard-").FullName;

@@ -108,3 +108,7 @@ database. Kelp reported 17.5 °C. Reef reported 23.5 °C with an empty oxygen fi
 - I05 heater write-failure subset passed. Pointed the SQLite path at a directory
   and attempted to apply a valid 22.5 °C heater target. The app displayed a
   logging error. Returning to Staff Mode confirmed that the target remained unset.
+- `HeaterWriteFailurePreservesTargetAndDoesNotPublishChange` also checks the
+  failure with a previously set target. It verifies that the previous value is
+  preserved and that the Hub publishes no equipment change. The Release suite
+  with this regression test passed 157 tests.
