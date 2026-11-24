@@ -120,6 +120,36 @@ public sealed class EquipmentWorkflowTests
         }
     }
 
+    [TestMethod]
+    public void FeedingWriteFailureDoesNotConsumePortionOrStartCooldown()
+    {
+        string folder = Directory.CreateTempSubdirectory("aquaguard-").FullName;
+        try
+        {
+            string live = Directory.CreateDirectory(Path.Combine(folder, "live")).FullName;
+            string offline = Path.Combine(folder, "offline");
+            var logger = new DataLogger(Path.Combine(live, "history.db"));
+            var clock = new FeedingClock();
+            var dispenser = new FoodDispenser("food", "reef", "Feeder", clock) { Logger = logger };
+            dispenser.SetEnabled(true);
+            Assert.IsTrue(dispenser.CanFeed);
+
+            Directory.Move(live, offline);
+            Assert.ThrowsExactly<SqliteException>(() => dispenser.TryDispense(2m));
+            Directory.Move(offline, live);
+
+            Assert.HasCount(0, logger.ReadFeedings("reef", "food", clock.Now.AddDays(-1)));
+            Assert.IsTrue(dispenser.TryDispense(2m));
+            Assert.IsFalse(dispenser.TryDispense(2m));
+            CollectionAssert.AreEqual(new[] { clock.Now },
+                logger.ReadFeedings("reef", "food", clock.Now.AddDays(-1)).ToArray());
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     private sealed class FeedingClock : TimeProvider
     {
         public DateTimeOffset Now { get; set; } = DateTimeOffset.UnixEpoch;

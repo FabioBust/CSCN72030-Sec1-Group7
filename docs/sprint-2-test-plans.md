@@ -112,3 +112,7 @@ database. Kelp reported 17.5 °C. Reef reported 23.5 °C with an empty oxygen fi
   failure with a previously set target. It verifies that the previous value is
   preserved and that the Hub publishes no equipment change. The Release suite
   with this regression test passed 157 tests.
+- `FeedingWriteFailureDoesNotConsumePortionOrStartCooldown` verifies that a
+  failed feeding write leaves the dispenser eligible after storage recovers.
+  The retry records one portion and starts the cooldown. The Release suite
+  with both database failure tests passed 158 tests.
