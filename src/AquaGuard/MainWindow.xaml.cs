@@ -42,6 +42,7 @@ public partial class MainWindow : Window
     {
         latestReadings = hub.PollHabitatSensors();
         ShowSelectedReadings();
+        SensorLoggingStatus.Text = hub.SensorLoggingFailed ? "Sensor history could not be saved to SQLite." : "";
     }
 
     private void ShowSelectedReadings() =>

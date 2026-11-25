@@ -2,6 +2,7 @@ using AquaGuard.Models;
 using AquaGuard.Data;
 using AquaGuard.Devices.Equipment;
 using System.Globalization;
+using Microsoft.Data.Sqlite;
 
 namespace AquaGuard.Core
 {
@@ -12,10 +13,12 @@ namespace AquaGuard.Core
         private readonly DataTransitBus bus;
         private readonly Dictionary<string, Habitat> habitats;
         private readonly Func<Habitat, bool>? handleFeeding;
+        private readonly DataLogger? logger;
         private readonly Dictionary<(string, string), (Func<double?> Read, string? Unit)> sensorInputs = new();
 
         public DataTransitBus Bus => bus;
         public IReadOnlyCollection<Habitat> Habitats => habitats.Values;
+        internal bool SensorLoggingFailed { get; private set; }
 
         public void RegisterHabitat(Habitat habitat)
         {
@@ -37,6 +40,7 @@ namespace AquaGuard.Core
         public IReadOnlyList<SensorDisplay> PollHabitatSensors()
         {
             var readings = new List<SensorDisplay>();
+            List<LoggedSensorReading>? batch = logger is null ? null : new();
             foreach (var habitat in habitats.Values)
             foreach (var sensor in habitat.Sensors)
             {
@@ -48,8 +52,24 @@ namespace AquaGuard.Core
                     Unit = input.Unit
                 };
                 readings.Add(display);
+                DateTimeOffset timestamp = DateTimeOffset.UtcNow;
                 bus.Publish(new SystemMessage(TelemetryKind.SensorReading, display.HabitatId,
-                    display.DeviceId, value.HasValue ? display.Reading : null, DateTime.UtcNow));
+                    display.DeviceId, value.HasValue ? display.Reading : null, timestamp.UtcDateTime));
+                if (value is double measured && double.IsFinite(measured))
+                    batch?.Add(new LoggedSensorReading(display.HabitatId, display.DeviceId, measured, display.Unit, timestamp));
+            }
+
+            if (logger is not null && batch is { Count: > 0 })
+            {
+                try
+                {
+                    logger.LogSensorReadings(batch);
+                    SensorLoggingFailed = false;
+                }
+                catch (SqliteException)
+                {
+                    SensorLoggingFailed = true;
+                }
             }
             return readings;
         }
@@ -67,6 +87,7 @@ namespace AquaGuard.Core
             this.bus = bus;
             this.habitats = habitats.ToDictionary(habitat => habitat.HabitatId);
             this.handleFeeding = handleFeeding;
+            this.logger = logger;
             controls = new EquipmentControlService(authentication, logger);
         }
 

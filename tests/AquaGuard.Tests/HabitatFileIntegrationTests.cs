@@ -1,12 +1,65 @@
 using System.IO;
 using AquaGuard.Core;
+using AquaGuard.Data;
 using AquaGuard.Models;
+using Microsoft.Data.Sqlite;
 
 namespace AquaGuard.Tests;
 
 [TestClass]
 public class HabitatFileIntegrationTests
 {
+    [TestMethod]
+    public void SensorPollingKeepsPublishingWhenLoggingFailsAndPersistsValidReadingsAfterRecovery()
+    {
+        string root = Directory.CreateTempSubdirectory("aquaguard-").FullName;
+        try
+        {
+            string inputs = Directory.CreateDirectory(Path.Combine(root, "inputs")).FullName;
+            string reef = Directory.CreateDirectory(Path.Combine(inputs, "reef")).FullName;
+            File.WriteAllText(Path.Combine(reef, "temperature.txt"), "21.5\n22.5");
+            File.WriteAllText(Path.Combine(reef, "oxygen.txt"), "invalid");
+            string storage = Path.Combine(root, "storage");
+            string file = Path.Combine(storage, "history.db");
+            var bus = new DataTransitBus();
+            var messages = new List<SystemMessage>();
+            bus.TelemetryReceived += messages.Add;
+            var hub = new Hub(new AuthenticationService(null), bus, [], null, new DataLogger(file));
+            HabitatFileSources.Load(hub, inputs);
+
+            Assert.AreEqual(21.5, hub.PollHabitatSensors().Single(r => r.DeviceId == "temperature").Value);
+            Assert.IsTrue(hub.SensorLoggingFailed);
+            Assert.AreEqual("21.5", messages.Single(m => m.DeviceId == "temperature").Value);
+            Assert.IsNull(messages.Single(m => m.DeviceId == "oxygen").Value);
+
+            Directory.CreateDirectory(storage);
+            Assert.AreEqual(22.5, hub.PollHabitatSensors().Single(r => r.DeviceId == "temperature").Value);
+            Assert.IsFalse(hub.SensorLoggingFailed);
+
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = file,
+                Pooling = false
+            }.ToString());
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT habitat_id, device_id, value, unit, timestamp_utc FROM sensor_readings";
+            using var row = command.ExecuteReader();
+            Assert.IsTrue(row.Read());
+            Assert.AreEqual("reef", row.GetString(0));
+            Assert.AreEqual("temperature", row.GetString(1));
+            Assert.AreEqual(22.5, row.GetDouble(2));
+            Assert.AreEqual("°C", row.GetString(3));
+            Assert.AreEqual(messages.Last(m => m.DeviceId == "temperature").Timestamp,
+                DateTimeOffset.Parse(row.GetString(4), System.Globalization.CultureInfo.InvariantCulture).UtcDateTime);
+            Assert.IsFalse(row.Read());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [TestMethod]
     public void FiveSensorsPublishChangingReadingsAndRecoverIndependently()
     {

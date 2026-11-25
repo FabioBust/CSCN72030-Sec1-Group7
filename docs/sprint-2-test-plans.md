@@ -172,3 +172,13 @@ verifies that SQLite records accepted changes with their habitat, device,
 setting and value. Rejected and repeated settings add no change record.
 An unusable database leaves previous settings intact and emits no change
 telemetry. The Release suite passed 161 tests after adding this coverage.
+
+## Sensor history persistence
+
+For the sensor-reading portion of REQ-FUN-016 and REQ-NFR-005,
+`HabitatFileIntegrationTests` checks that a valid reading is persisted with
+the habitat, device, value, unit and the same UTC timestamp sent over the bus.
+Invalid readings remain visible as No Data and produce no numeric history row.
+An unavailable database leaves sensor polling and telemetry active. Saving
+resumes on the next valid poll after storage recovers. The Release suite
+passed 162 tests with this coverage.

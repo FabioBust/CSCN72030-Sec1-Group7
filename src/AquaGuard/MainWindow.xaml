@@ -5,6 +5,7 @@
     <DockPanel Margin="28">
         <TextBlock DockPanel.Dock="Top" Text="Staff Dashboard" FontSize="24" Margin="0,0,0,16"/>
         <TextBlock x:Name="SensorStatus" DockPanel.Dock="Top" Margin="0,0,0,8"/>
+        <TextBlock x:Name="SensorLoggingStatus" DockPanel.Dock="Top" TextWrapping="Wrap"/>
         <StackPanel DockPanel.Dock="Top">
             <Label Content="_Habitat" Target="{Binding ElementName=HabitatSelection}"/>
             <ComboBox x:Name="HabitatSelection" DisplayMemberPath="Name" SelectionChanged="SelectHabitat"/>

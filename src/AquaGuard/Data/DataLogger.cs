@@ -10,6 +10,53 @@ internal sealed class DataLogger(string databasePath)
         SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_winsqlite3());
     }
 
+    internal void LogSensorReadings(IReadOnlyList<LoggedSensorReading> readings)
+    {
+        if (readings.Count == 0)
+            return;
+
+        using var connection = OpenDatabase(timeoutSeconds: 1);
+        using var transaction = connection.BeginTransaction();
+        using var schema = connection.CreateCommand();
+        schema.Transaction = transaction;
+        schema.CommandText = """
+            CREATE TABLE IF NOT EXISTS sensor_readings (
+                id INTEGER PRIMARY KEY,
+                habitat_id TEXT NOT NULL,
+                device_id TEXT NOT NULL,
+                value REAL NOT NULL,
+                unit TEXT,
+                timestamp_utc TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS sensor_readings_habitat_time
+                ON sensor_readings (habitat_id, timestamp_utc);
+            """;
+        schema.ExecuteNonQuery();
+
+        using var insert = connection.CreateCommand();
+        insert.Transaction = transaction;
+        insert.CommandText = """
+            INSERT INTO sensor_readings (habitat_id, device_id, value, unit, timestamp_utc)
+            VALUES ($habitat, $device, $value, $unit, $timestamp)
+            """;
+        var habitat = insert.Parameters.Add("$habitat", SqliteType.Text);
+        var device = insert.Parameters.Add("$device", SqliteType.Text);
+        var value = insert.Parameters.Add("$value", SqliteType.Real);
+        var unit = insert.Parameters.Add("$unit", SqliteType.Text);
+        var timestamp = insert.Parameters.Add("$timestamp", SqliteType.Text);
+        foreach (var reading in readings)
+        {
+            habitat.Value = reading.HabitatId;
+            device.Value = reading.DeviceId;
+            value.Value = reading.Value;
+            unit.Value = (object?)reading.Unit ?? DBNull.Value;
+            timestamp.Value = FormatTimestamp(reading.Timestamp);
+            insert.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
     internal IReadOnlyList<DateTimeOffset> ReadFeedings(string habitatId, string deviceId, DateTimeOffset since)
     {
         using var connection = OpenFeedingDatabase();
@@ -102,12 +149,13 @@ internal sealed class DataLogger(string databasePath)
         insert.ExecuteNonQuery();
     }
 
-    private SqliteConnection OpenDatabase()
+    private SqliteConnection OpenDatabase(int timeoutSeconds = 30)
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
-            Pooling = false
+            Pooling = false,
+            DefaultTimeout = timeoutSeconds
         }.ToString());
         try
         {
@@ -121,3 +169,6 @@ internal sealed class DataLogger(string databasePath)
         }
     }
 }
+
+internal sealed record LoggedSensorReading(
+    string HabitatId, string DeviceId, double Value, string? Unit, DateTimeOffset Timestamp);
