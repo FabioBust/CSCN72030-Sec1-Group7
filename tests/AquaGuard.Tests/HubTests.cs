@@ -15,6 +15,31 @@ namespace AquaGuard.Tests
         private readonly Habitat habitat = new("reef", "Reef");
 
         [TestMethod]
+        public void PercentageCommandsRequireStaffAndOnlyPublishAcceptedChanges()
+        {
+            var pump = new CirculationPump("pump", "reef", "Pump");
+            var aerator = new Aerator("air", "reef", "Aerator");
+            habitat.AddEquipment(pump);
+            habitat.AddEquipment(aerator);
+            var otherHabitat = new Habitat("kelp", "Kelp");
+            var otherPump = new CirculationPump("pump", "kelp", "Pump");
+            otherHabitat.AddEquipment(otherPump);
+            var hub = new Hub(authentication, bus, [habitat, otherHabitat]);
+            var events = new List<SystemMessage>();
+            bus.TelemetryReceived += events.Add;
+
+            Assert.ThrowsExactly<UnauthorizedAccessException>(() => hub.SetEquipmentPercentage("reef", "pump", 40));
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+            hub.SetEquipmentPercentage("reef", "pump", 40);
+            hub.SetEquipmentPercentage("reef", "air", 60);
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => hub.SetEquipmentPercentage("reef", "air", 101));
+            Assert.AreEqual(40, pump.SpeedPercentage);
+            Assert.AreEqual(0, otherPump.SpeedPercentage);
+            Assert.AreEqual(60, aerator.OutputPercentage);
+            CollectionAssert.AreEqual(new[] { "Speed: 40%", "Output: 60%" }, events.Select(e => e.Value).ToArray());
+        }
+
+        [TestMethod]
         public void SensorTelemetryPreservesTheMessageContract()
         {
             var hub = new Hub(authentication, bus, [habitat]);

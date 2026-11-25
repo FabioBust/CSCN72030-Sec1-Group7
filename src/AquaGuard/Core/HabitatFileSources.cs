@@ -17,6 +17,9 @@ public static class HabitatFileSources
         foreach (string directory in Directory.GetDirectories(root).Order())
         {
             var habitat = new Habitat(Path.GetFileName(directory), Path.GetFileName(directory));
+            habitat.AddEquipment(new CirculationPump("circulation-pump", habitat.HabitatId, "Circulation pump"));
+            habitat.AddEquipment(new FilterSystem("filter-system", habitat.HabitatId, "Filter system"));
+            habitat.AddEquipment(new Aerator("aerator", habitat.HabitatId, "Aerator"));
             habitat.AddEquipment(new HeaterChiller("heater-chiller", habitat.HabitatId, "Heater/chiller"));
             habitat.AddEquipment(new FoodDispenser("food-dispenser", habitat.HabitatId, "Food dispenser") { Logger = logger });
             hub.RegisterHabitat(habitat);

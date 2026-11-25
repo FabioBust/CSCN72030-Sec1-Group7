@@ -1,9 +1,26 @@
 using AquaGuard.Devices;
+using AquaGuard.Devices.Equipment;
 
 namespace AquaGuard.Core
 {
     public sealed class EquipmentControlService(AuthenticationService authentication)
     {
+        internal string SetPercentage(Habitat habitat, string deviceId, int percentage)
+        {
+            authentication.RequireStaff();
+            switch (habitat.GetEquipment(deviceId))
+            {
+                case CirculationPump pump:
+                    pump.SetSpeed(percentage);
+                    return "Speed";
+                case Aerator aerator:
+                    aerator.SetOutput(percentage);
+                    return "Output";
+                default:
+                    throw new InvalidOperationException("No equipment with a percentage setting matches the device ID.");
+            }
+        }
+
         public void SetPower(Habitat habitat, string deviceId, bool isOn)
         {
             authentication.RequireStaff();
