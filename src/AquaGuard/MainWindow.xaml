@@ -21,8 +21,9 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Habitat" DisplayMemberBinding="{Binding HabitatId}" Width="170"/>
-                    <GridViewColumn Header="Sensor" DisplayMemberBinding="{Binding DeviceId}" Width="230"/>
+                    <GridViewColumn Header="Sensor" DisplayMemberBinding="{Binding SensorName}" Width="230"/>
                     <GridViewColumn Header="Reading" DisplayMemberBinding="{Binding Reading}" Width="150"/>
+                    <GridViewColumn Header="Unit" DisplayMemberBinding="{Binding Unit}" Width="90"/>
                 </GridView>
             </ListView.View>
         </ListView>

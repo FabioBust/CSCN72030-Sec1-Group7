@@ -29,6 +29,13 @@ public class HabitatFileIntegrationTests
             Assert.HasCount(10, messages);
             foreach (var reading in first)
                 Assert.AreNotEqual(reading.Value, second.Single(r => r.DeviceId == reading.DeviceId).Value);
+            CollectionAssert.AreEqual(first.ToArray(), hub.PollHabitatSensors().ToArray());
+            var units = first.ToDictionary(reading => reading.DeviceId, reading => reading.Unit);
+            Assert.AreEqual("°C", units["temperature"]);
+            Assert.AreEqual("mg/L", units["oxygen"]);
+            Assert.AreEqual("L/min", units["flow"]);
+            Assert.AreEqual("ppt", units["salinity"]);
+            Assert.IsNull(units["ph"]);
             foreach (string id in new[] { "temperature", "oxygen", "ph", "flow", "salinity" })
             {
                 string path = Path.Combine(reef, id + ".txt");
