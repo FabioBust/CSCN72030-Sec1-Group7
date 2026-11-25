@@ -20,6 +20,14 @@ namespace AquaGuard.Core
         public IReadOnlyCollection<Habitat> Habitats => habitats.Values;
         internal bool SensorLoggingFailed { get; private set; }
 
+        internal IReadOnlyList<HabitatHistoryEntry> ReadHabitatHistory(
+            string habitatId, DateTimeOffset through, int offset, int limit)
+        {
+            authentication.RequireStaff();
+            Habitat habitat = GetHabitat(habitatId);
+            return logger?.ReadHabitatHistory(habitat.HabitatId, through, offset, limit) ?? [];
+        }
+
         public void RegisterHabitat(Habitat habitat)
         {
             ArgumentNullException.ThrowIfNull(habitat);

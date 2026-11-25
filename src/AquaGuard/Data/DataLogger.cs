@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using Microsoft.Data.Sqlite;
 
 namespace AquaGuard.Data;
@@ -119,6 +120,66 @@ internal sealed class DataLogger(string databasePath)
     private static string FormatTimestamp(DateTimeOffset timestamp) =>
         timestamp.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
 
+    internal IReadOnlyList<HabitatHistoryEntry> ReadHabitatHistory(
+        string habitatId, DateTimeOffset through, int offset, int limit)
+    {
+        if (!File.Exists(databasePath))
+            return [];
+
+        using var connection = OpenDatabase(timeoutSeconds: 1, mode: SqliteOpenMode.ReadOnly);
+        using var schema = connection.CreateCommand();
+        schema.CommandText = """
+            SELECT name FROM sqlite_master
+            WHERE type = 'table'
+              AND name IN ('sensor_readings', 'equipment_setting_changes', 'feeding_events')
+            """;
+        var queries = new List<string>();
+        using (var tables = schema.ExecuteReader())
+        {
+            while (tables.Read())
+            {
+                queries.Add(tables.GetString(0) switch
+                {
+                    "sensor_readings" => """
+                        SELECT id, timestamp_utc, 'Sensor reading' AS kind, device_id, '' AS setting,
+                               value, unit FROM sensor_readings WHERE habitat_id = $habitat AND timestamp_utc <= $through
+                        """,
+                    "equipment_setting_changes" => """
+                        SELECT id, timestamp_utc, 'Equipment setting' AS kind, device_id, setting,
+                               value, NULL AS unit FROM equipment_setting_changes
+                        WHERE habitat_id = $habitat AND timestamp_utc <= $through
+                        """,
+                    "feeding_events" => """
+                        SELECT id, timestamp_utc, 'Feeding' AS kind, device_id, 'portion' AS setting,
+                               1 AS value, NULL AS unit FROM feeding_events
+                        WHERE habitat_id = $habitat AND timestamp_utc <= $through
+                        """,
+                    _ => throw new InvalidOperationException("Unexpected history table.")
+                });
+            }
+        }
+
+        if (queries.Count == 0)
+            return [];
+
+        using var select = connection.CreateCommand();
+        select.CommandText = string.Join(" UNION ALL ", queries)
+            + " ORDER BY timestamp_utc DESC, kind, id DESC LIMIT $limit OFFSET $offset";
+        select.Parameters.AddWithValue("$habitat", habitatId);
+        select.Parameters.AddWithValue("$through", FormatTimestamp(through));
+        select.Parameters.AddWithValue("$limit", limit);
+        select.Parameters.AddWithValue("$offset", offset);
+        using var rows = select.ExecuteReader();
+        var history = new List<HabitatHistoryEntry>();
+        while (rows.Read())
+        {
+            history.Add(new HabitatHistoryEntry(rows.GetString(1), rows.GetString(2), rows.GetString(3),
+                rows.GetString(4), rows.GetString(5), rows.IsDBNull(6) ? null : rows.GetString(6)));
+        }
+
+        return history;
+    }
+
     internal void LogEquipmentSetting(string habitatId, string deviceId, string setting, string value)
     {
         using var connection = OpenDatabase();
@@ -149,11 +210,12 @@ internal sealed class DataLogger(string databasePath)
         insert.ExecuteNonQuery();
     }
 
-    private SqliteConnection OpenDatabase(int timeoutSeconds = 30)
+    private SqliteConnection OpenDatabase(int timeoutSeconds = 30, SqliteOpenMode mode = SqliteOpenMode.ReadWriteCreate)
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
+            Mode = mode,
             Pooling = false,
             DefaultTimeout = timeoutSeconds
         }.ToString());
@@ -172,3 +234,6 @@ internal sealed class DataLogger(string databasePath)
 
 internal sealed record LoggedSensorReading(
     string HabitatId, string DeviceId, double Value, string? Unit, DateTimeOffset Timestamp);
+
+internal sealed record HabitatHistoryEntry(
+    string TimestampUtc, string Kind, string DeviceId, string Setting, string Value, string? Unit);
