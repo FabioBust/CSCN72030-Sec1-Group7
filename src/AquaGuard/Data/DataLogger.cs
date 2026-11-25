@@ -5,8 +5,16 @@ using Microsoft.Data.Sqlite;
 
 namespace AquaGuard.Data;
 
-internal sealed class DataLogger(string databasePath)
+internal sealed class DataLogger
 {
+    private readonly string databasePath;
+
+    internal DataLogger(string databasePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
+        this.databasePath = Path.GetFullPath(databasePath);
+    }
+
     static DataLogger()
     {
         SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_winsqlite3());
@@ -14,6 +22,10 @@ internal sealed class DataLogger(string databasePath)
 
     internal void LogSensorReadings(IReadOnlyList<LoggedSensorReading> readings)
     {
+        ArgumentNullException.ThrowIfNull(readings);
+        if (readings.Any(reading => !double.IsFinite(reading.Value)))
+            throw new ArgumentOutOfRangeException(nameof(readings), "Sensor values must be finite.");
+
         if (readings.Count == 0)
             return;
 
@@ -168,6 +180,10 @@ internal sealed class DataLogger(string databasePath)
     internal IReadOnlyList<HabitatHistoryEntry> ReadHabitatHistory(
         string habitatId, DateTimeOffset through, int offset, int limit)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(habitatId);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+
         if (!File.Exists(databasePath))
             return [];
 
@@ -260,7 +276,7 @@ internal sealed class DataLogger(string databasePath)
         insert.ExecuteNonQuery();
     }
 
-    private SqliteConnection OpenDatabase(int timeoutSeconds = 30, SqliteOpenMode mode = SqliteOpenMode.ReadWriteCreate)
+    private SqliteConnection OpenDatabase(int timeoutSeconds = 1, SqliteOpenMode mode = SqliteOpenMode.ReadWriteCreate)
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
