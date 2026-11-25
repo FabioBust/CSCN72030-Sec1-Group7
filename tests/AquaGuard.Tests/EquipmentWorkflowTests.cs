@@ -65,6 +65,78 @@ public sealed class EquipmentWorkflowTests
     }
 
     [TestMethod]
+    public void StaffEquipmentChangesLogOnlyAcceptedChangedSettings()
+    {
+        string folder = Directory.CreateTempSubdirectory("aquaguard-").FullName;
+        try
+        {
+            string file = Path.Combine(folder, "history.db");
+            var habitat = new Habitat("reef", "Reef");
+            var pump = new CirculationPump("pump", "reef", "Pump");
+            var filter = new FilterSystem("filter", "reef", "Filter");
+            var aerator = new Aerator("air", "reef", "Aerator");
+            var feeder = new FoodDispenser("food", "reef", "Feeder");
+            habitat.AddEquipment(pump);
+            habitat.AddEquipment(filter);
+            habitat.AddEquipment(aerator);
+            habitat.AddEquipment(feeder);
+            var hub = new Hub(auth, new DataTransitBus(), [habitat], null, new DataLogger(file));
+
+            Assert.ThrowsExactly<UnauthorizedAccessException>(() => hub.SetEquipmentPower("reef", "pump", true));
+            Assert.IsTrue(auth.TrySignIn("test-code"));
+            hub.SetEquipmentPower("reef", "pump", true);
+            hub.SetEquipmentPower("reef", "filter", true);
+            hub.SetEquipmentPower("reef", "food", true);
+            hub.SetEquipmentPercentage("reef", "pump", 40);
+            hub.SetEquipmentPercentage("reef", "air", 60);
+            hub.SetEquipmentPercentage("reef", "air", 60);
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => hub.SetEquipmentPercentage("reef", "air", 101));
+
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = file,
+                Pooling = false
+            }.ToString());
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT habitat_id, device_id, setting, value FROM equipment_setting_changes ORDER BY id";
+            using var rows = command.ExecuteReader();
+            var changes = new List<string>();
+            while (rows.Read())
+                changes.Add($"{rows.GetString(0)}/{rows.GetString(1)}/{rows.GetString(2)}/{rows.GetString(3)}");
+            CollectionAssert.AreEqual(new[]
+            {
+                "reef/pump/power/On", "reef/filter/power/On", "reef/food/enabled/On",
+                "reef/pump/speed_percentage/40", "reef/air/output_percentage/60"
+            }, changes);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void EquipmentWriteFailurePreservesPowerAndPercentageWithoutPublishing()
+    {
+        var habitat = new Habitat("reef", "Reef");
+        var pump = new CirculationPump("pump", "reef", "Pump");
+        pump.SetSpeed(35);
+        habitat.AddEquipment(pump);
+        var bus = new DataTransitBus();
+        var events = new List<string?>();
+        bus.TelemetryReceived += message => events.Add(message.Value);
+        var hub = new Hub(auth, bus, [habitat], null, new DataLogger(AppContext.BaseDirectory));
+        Assert.IsTrue(auth.TrySignIn("test-code"));
+
+        Assert.ThrowsExactly<SqliteException>(() => hub.SetEquipmentPower("reef", "pump", true));
+        Assert.ThrowsExactly<SqliteException>(() => hub.SetEquipmentPercentage("reef", "pump", 55));
+        Assert.IsFalse(pump.IsOn);
+        Assert.AreEqual(35, pump.SpeedPercentage);
+        Assert.HasCount(0, events);
+    }
+
+    [TestMethod]
     public void HeaterWriteFailurePreservesTargetAndDoesNotPublishChange()
     {
         var habitat = new Habitat("reef", "Reef");

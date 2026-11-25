@@ -17,9 +17,9 @@ public partial class LoginWindow : Window
         InitializeComponent();
         authentication = new AuthenticationService(
             Environment.GetEnvironmentVariable("AQUAGUARD_STAFF_CODE_SHA256"));
-        hub = new Hub(authentication, new DataTransitBus(), []);
         logger = new DataLogger(Environment.GetEnvironmentVariable("AQUAGUARD_DATABASE_PATH")
             ?? Path.Combine(Environment.CurrentDirectory, "aquaguard.db"));
+        hub = new Hub(authentication, new DataTransitBus(), [], handleFeeding: null, logger: logger);
         string? root = Environment.GetEnvironmentVariable("AQUAGUARD_SENSOR_DATA_DIRECTORY");
         try
         {

@@ -110,7 +110,8 @@ public partial class MainWindow : Window
             habitat.Equipment.OfType<FoodDispenser>().SingleOrDefault() is not { } feeder)
             return;
 
-        hub.SetEquipmentPower(habitat.HabitatId, feeder.DeviceId, !feeder.IsEnabled);
+        if (!TryApplyLoggedChange(feeder.Name, () => hub.SetEquipmentPower(habitat.HabitatId, feeder.DeviceId, !feeder.IsEnabled)))
+            return;
         FeederToggle.Content = feeder.IsEnabled ? "_Disable food dispenser" : "_Enable food dispenser";
         CommandFeedback.Text = $"{feeder.Name}: {(feeder.IsEnabled ? "enabled" : "disabled")}.";
     }
@@ -127,7 +128,8 @@ public partial class MainWindow : Window
             habitat.Equipment.OfType<CirculationPump>().SingleOrDefault() is not { } pump)
             return;
 
-        hub.SetEquipmentPower(habitat.HabitatId, pump.DeviceId, !pump.IsOn);
+        if (!TryApplyLoggedChange(pump.Name, () => hub.SetEquipmentPower(habitat.HabitatId, pump.DeviceId, !pump.IsOn)))
+            return;
         PumpToggle.Content = pump.IsOn ? "Turn pump off" : "Turn pump on";
         CommandFeedback.Text = $"{pump.Name}: {(pump.IsOn ? "on" : "off")}.";
     }
@@ -138,7 +140,8 @@ public partial class MainWindow : Window
             habitat.Equipment.OfType<FilterSystem>().SingleOrDefault() is not { } filter)
             return;
 
-        hub.SetEquipmentPower(habitat.HabitatId, filter.DeviceId, !filter.IsOn);
+        if (!TryApplyLoggedChange(filter.Name, () => hub.SetEquipmentPower(habitat.HabitatId, filter.DeviceId, !filter.IsOn)))
+            return;
         FilterToggle.Content = filter.IsOn ? "Turn filter off" : "Turn filter on";
         CommandFeedback.Text = $"{filter.Name}: {(filter.IsOn ? "on" : "off")}.";
     }
@@ -161,7 +164,21 @@ public partial class MainWindow : Window
             return;
         }
 
-        hub.SetEquipmentPercentage(device.HabitatId, device.DeviceId, percentage);
-        CommandFeedback.Text = $"{device.Name} {setting}: {percentage}%.";
+        if (TryApplyLoggedChange(device.Name, () => hub.SetEquipmentPercentage(device.HabitatId, device.DeviceId, percentage)))
+            CommandFeedback.Text = $"{device.Name} {setting}: {percentage}%.";
+    }
+
+    private bool TryApplyLoggedChange(string deviceName, Action apply)
+    {
+        try
+        {
+            apply();
+            return true;
+        }
+        catch (SqliteException)
+        {
+            CommandFeedback.Text = $"Could not log the {deviceName} change. The previous setting was kept.";
+            return false;
+        }
     }
 }

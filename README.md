@@ -74,7 +74,7 @@ Configured habitats register a simulated heater/chiller and food dispenser.
 Staff can apply heater targets and enable or disable the dispenser. Visitor Mode
 offers simulated CAD $2.00 feed requests for eligible habitats.
 
-Set `AQUAGUARD_DATABASE_PATH` to select a SQLite file for heater target changes
+Set `AQUAGUARD_DATABASE_PATH` to select a SQLite file for equipment setting changes
 and feeding events. The default is `aquaguard.db` in the working directory.
 Feeding history survives restart. Each dispenser starts disabled.
 

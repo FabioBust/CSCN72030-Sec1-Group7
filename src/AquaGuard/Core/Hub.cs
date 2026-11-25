@@ -56,12 +56,18 @@ namespace AquaGuard.Core
 
         public Hub(AuthenticationService authentication, DataTransitBus bus,
             IEnumerable<Habitat> habitats, Func<Habitat, bool>? handleFeeding = null)
+            : this(authentication, bus, habitats, handleFeeding, null)
+        {
+        }
+
+        internal Hub(AuthenticationService authentication, DataTransitBus bus,
+            IEnumerable<Habitat> habitats, Func<Habitat, bool>? handleFeeding, DataLogger? logger)
         {
             this.authentication = authentication;
             this.bus = bus;
             this.habitats = habitats.ToDictionary(habitat => habitat.HabitatId);
             this.handleFeeding = handleFeeding;
-            controls = new EquipmentControlService(authentication);
+            controls = new EquipmentControlService(authentication, logger);
         }
 
         public void PublishSensorReading(DeviceTelemetry reading)

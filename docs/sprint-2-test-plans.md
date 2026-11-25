@@ -165,5 +165,10 @@ output 60%, pump power on, and filter power on. The app rejected pump speed
 101 and aerator output -1 and named each invalid input. Reef still showed
 default values. Switching back to kelp showed 40% and 60%, with both power
 settings still on. These observations cover the AG-48 / US-12 feedback and
-habitat-routing cases for the added controls. SQLite logging for these
-controls remains pending under REQ-FUN-016.
+habitat-routing cases for the added controls.
+
+For the equipment-setting portion of REQ-FUN-016, `EquipmentWorkflowTests`
+verifies that SQLite records accepted changes with their habitat, device,
+setting and value. Rejected and repeated settings add no change record.
+An unusable database leaves previous settings intact and emits no change
+telemetry. The Release suite passed 161 tests after adding this coverage.
