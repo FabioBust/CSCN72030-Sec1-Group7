@@ -53,6 +53,7 @@ public partial class MainWindow : Window
     private void UpdateSelection()
     {
         ShowSelectedReadings();
+        HistoryButton.IsEnabled = SelectedHabitat is not null;
         var heater = SelectedHabitat?.Equipment.OfType<HeaterChiller>().SingleOrDefault();
         HeaterTarget.Text = heater?.TargetTemperature?.ToString("0.0") ?? "";
         HeaterTarget.IsEnabled = heater is not null;
@@ -121,6 +122,12 @@ public partial class MainWindow : Window
     {
         returnToLogin();
         Close();
+    }
+
+    private void ShowHistory(object sender, RoutedEventArgs e)
+    {
+        if (SelectedHabitat is { } habitat)
+            new HabitatHistoryWindow(hub, habitat) { Owner = this }.ShowDialog();
     }
 
     private void TogglePump(object sender, RoutedEventArgs e)

@@ -182,3 +182,13 @@ Invalid readings remain visible as No Data and produce no numeric history row.
 An unavailable database leaves sensor polling and telemetry active. Saving
 resumes on the next valid poll after storage recovers. The Release suite
 passed 162 tests with this coverage.
+
+## Staff habitat history verification
+
+REQ-FUN-017 is covered for stored sensor readings, equipment changes and
+feeding events. `HabitatHistoryTests` verifies Staff authorization, habitat
+isolation, empty and older database compatibility, stable paging, and UTC
+ordering. In the running Release app, kelp showed the no-records message.
+Reef showed a logged 22.5 °C heater target and timestamped 23.5 °C sensor
+readings. Alarm history remains pending until alarm events are persisted.
+The Release suite passed 172 tests.
