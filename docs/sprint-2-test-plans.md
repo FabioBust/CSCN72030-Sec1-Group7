@@ -99,6 +99,18 @@ database. Kelp reported 17.5 °C. Reef reported 23.5 °C with an empty oxygen fi
 | S05 | Partial | The persisted feeding row was verified independently. Full event-type coverage and Staff history retrieval remain blocked on integration. |
 | UXR01–UXR07 | Participant sessions unrun | The functional smoke checks supply no participant completion-rate or timing evidence. |
 
+## US-4 Habitat Selection acceptance
+
+| Acceptance criterion | Evidence | Result |
+| --- | --- | --- |
+| Staff can select a configured habitat using a Hub-backed WPF selector. | `MainWindow.xaml` defines `HabitatSelection`. `MainWindow.xaml.cs` binds its items to `Hub.Habitats`. In the Release app, the configured kelp and reef habitats were available in the selector. | Pass |
+| Selecting a different habitat updates the dashboard to that habitat. | With kelp selected, Staff saw temperature 17.5 °C. Switching to reef replaced the kelp rows with reef temperature 23.5 °C and reef oxygen No Data. | Pass |
+
+Traceability: REQ-FUN-001 and REQ-INT-002. The manual evidence comes from the
+two-habitat Release check recorded above. The implementation was delivered in
+GitHub PR #20, which was merged at `aa812d6`. This acceptance check covers
+habitat selection. The separate UXR01 participant timing case remains unrun.
+
 ## Sensor recovery and database failure checks
 
 - S02/I01 recovery subset passed. With the Staff dashboard open, removed the
