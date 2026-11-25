@@ -10,6 +10,60 @@ namespace AquaGuard.Tests;
 public class HabitatFileIntegrationTests
 {
     [TestMethod]
+    public void ConfiguredSensorRaisesUpdatesAndResolvesOneAlarmWithPersistedTransitions()
+    {
+        string root = Directory.CreateTempSubdirectory("aquaguard-alerts-").FullName;
+        try
+        {
+            string reef = Directory.CreateDirectory(Path.Combine(root, "reef")).FullName;
+            string kelp = Directory.CreateDirectory(Path.Combine(root, "kelp")).FullName;
+            File.WriteAllText(Path.Combine(reef, "temperature.txt"), "21\n28\n28\n29\nbad\n25");
+            File.WriteAllText(Path.Combine(kelp, "temperature.txt"), "29");
+            File.WriteAllText(Path.Combine(reef, "thresholds.json"),
+                """{"temperature":{"WarningLow":18,"NormalLow":21,"NormalHigh":25,"WarningHigh":28}}""");
+            File.WriteAllText(Path.Combine(kelp, "thresholds.json"),
+                """{"temperature":{"WarningLow":18,"NormalLow":30,"NormalHigh":25,"WarningHigh":28}}""");
+            string storage = Path.Combine(root, "storage");
+            var logger = new DataLogger(Path.Combine(storage, "history.db"));
+            var hub = new Hub(new AuthenticationService(null), new DataTransitBus(), [], null, logger);
+            HabitatFileSources.Load(hub, root);
+            Assert.IsTrue(hub.ThresholdConfigurationFailed);
+
+            SensorDisplay PollReef()
+            {
+                var displays = hub.PollHabitatSensors();
+                Assert.IsNull(displays.Single(row => row.HabitatId == "kelp").Classification);
+                return displays.Single(row => row.HabitatId == "reef");
+            }
+
+            Assert.AreEqual(EnvironmentalSeverity.Normal, PollReef().Classification);
+            Assert.AreEqual(EnvironmentalSeverity.Warning, PollReef().Classification);
+            Assert.AreEqual(EnvironmentalSeverity.Warning, hub.ActiveAlerts.Single().Severity);
+            Assert.IsTrue(hub.AlarmLoggingFailed);
+            Assert.AreEqual(EnvironmentalSeverity.Warning, PollReef().Classification);
+            Assert.AreEqual(EnvironmentalSeverity.Critical, PollReef().Classification);
+            Assert.AreEqual(EnvironmentalSeverity.Critical, hub.ActiveAlerts.Single().Severity);
+            Directory.CreateDirectory(storage);
+            Assert.IsNull(PollReef().Classification);
+            Assert.HasCount(1, hub.ActiveAlerts);
+            Assert.IsFalse(hub.AlarmLoggingFailed);
+            Assert.AreEqual(EnvironmentalSeverity.Normal, PollReef().Classification);
+            Assert.HasCount(0, hub.ActiveAlerts);
+
+            var events = logger.ReadHabitatHistory("reef", DateTimeOffset.UtcNow, 0, 20)
+                .Where(row => row.Kind == "Alarm").ToArray();
+            CollectionAssert.AreEqual(new[] { "Resolved:Normal", "Updated:Critical", "Raised:Warning" },
+                events.Select(row => $"{row.Setting}:{row.Value}").ToArray());
+            Assert.IsFalse(logger.ReadHabitatHistory("kelp", DateTimeOffset.UtcNow, 0, 20)
+                .Any(row => row.Kind == "Alarm"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void SensorPollingKeepsPublishingWhenLoggingFailsAndPersistsValidReadingsAfterRecovery()
     {
         string root = Directory.CreateTempSubdirectory("aquaguard-").FullName;

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using AquaGuard.Core;
 using Microsoft.Data.Sqlite;
 
 namespace AquaGuard.Data;
@@ -120,6 +121,50 @@ internal sealed class DataLogger(string databasePath)
     private static string FormatTimestamp(DateTimeOffset timestamp) =>
         timestamp.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
 
+    internal void LogAlarmTransitions(IReadOnlyList<AlarmTransition> transitions)
+    {
+        using var connection = OpenDatabase(timeoutSeconds: 1);
+        using var transaction = connection.BeginTransaction();
+        using var schema = connection.CreateCommand();
+        schema.Transaction = transaction;
+        schema.CommandText = """
+            CREATE TABLE IF NOT EXISTS alarm_events (
+                id INTEGER PRIMARY KEY,
+                habitat_id TEXT NOT NULL,
+                device_id TEXT NOT NULL,
+                change TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                timestamp_utc TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS alarm_events_habitat_time
+                ON alarm_events (habitat_id, timestamp_utc);
+            """;
+        schema.ExecuteNonQuery();
+
+        using var insert = connection.CreateCommand();
+        insert.Transaction = transaction;
+        insert.CommandText = """
+            INSERT INTO alarm_events (habitat_id, device_id, change, severity, timestamp_utc)
+            VALUES ($habitat, $device, $change, $severity, $timestamp)
+            """;
+        var habitat = insert.Parameters.Add("$habitat", SqliteType.Text);
+        var device = insert.Parameters.Add("$device", SqliteType.Text);
+        var change = insert.Parameters.Add("$change", SqliteType.Text);
+        var severity = insert.Parameters.Add("$severity", SqliteType.Text);
+        var timestamp = insert.Parameters.Add("$timestamp", SqliteType.Text);
+        foreach (var transition in transitions)
+        {
+            habitat.Value = transition.HabitatId;
+            device.Value = transition.DeviceId;
+            change.Value = transition.Change;
+            severity.Value = transition.Severity.ToString();
+            timestamp.Value = FormatTimestamp(transition.Timestamp);
+            insert.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
     internal IReadOnlyList<HabitatHistoryEntry> ReadHabitatHistory(
         string habitatId, DateTimeOffset through, int offset, int limit)
     {
@@ -131,7 +176,7 @@ internal sealed class DataLogger(string databasePath)
         schema.CommandText = """
             SELECT name FROM sqlite_master
             WHERE type = 'table'
-              AND name IN ('sensor_readings', 'equipment_setting_changes', 'feeding_events')
+              AND name IN ('sensor_readings', 'equipment_setting_changes', 'feeding_events', 'alarm_events')
             """;
         var queries = new List<string>();
         using (var tables = schema.ExecuteReader())
@@ -152,6 +197,11 @@ internal sealed class DataLogger(string databasePath)
                     "feeding_events" => """
                         SELECT id, timestamp_utc, 'Feeding' AS kind, device_id, 'portion' AS setting,
                                1 AS value, NULL AS unit FROM feeding_events
+                        WHERE habitat_id = $habitat AND timestamp_utc <= $through
+                        """,
+                    "alarm_events" => """
+                        SELECT id, timestamp_utc, 'Alarm' AS kind, device_id, change AS setting,
+                               severity AS value, NULL AS unit FROM alarm_events
                         WHERE habitat_id = $habitat AND timestamp_utc <= $through
                         """,
                     _ => throw new InvalidOperationException("Unexpected history table.")

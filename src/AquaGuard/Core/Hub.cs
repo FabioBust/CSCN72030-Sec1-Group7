@@ -14,11 +14,16 @@ namespace AquaGuard.Core
         private readonly Dictionary<string, Habitat> habitats;
         private readonly Func<Habitat, bool>? handleFeeding;
         private readonly DataLogger? logger;
-        private readonly Dictionary<(string, string), (Func<double?> Read, string? Unit)> sensorInputs = new();
+        private readonly Dictionary<(string, string), (Func<double?> Read, string? Unit, SensorThresholds? Thresholds)> sensorInputs = new();
+        private readonly AlertManager alertManager = new();
+        private readonly List<AlarmTransition> pendingAlarmHistory = new();
 
         public DataTransitBus Bus => bus;
         public IReadOnlyCollection<Habitat> Habitats => habitats.Values;
         internal bool SensorLoggingFailed { get; private set; }
+        internal bool AlarmLoggingFailed { get; private set; }
+        internal bool ThresholdConfigurationFailed { get; set; }
+        internal IReadOnlyList<Alert> ActiveAlerts => alertManager.ActiveAlerts;
 
         internal IReadOnlyList<HabitatHistoryEntry> ReadHabitatHistory(
             string habitatId, DateTimeOffset through, int offset, int limit)
@@ -37,12 +42,13 @@ namespace AquaGuard.Core
         public void RegisterSensorInput(string habitatId, string deviceId, Func<double?> read) =>
             RegisterSensorInput(habitatId, deviceId, read, null);
 
-        internal void RegisterSensorInput(string habitatId, string deviceId, Func<double?> read, string? unit)
+        internal void RegisterSensorInput(string habitatId, string deviceId, Func<double?> read,
+            string? unit, SensorThresholds? thresholds = null)
         {
             ArgumentNullException.ThrowIfNull(read);
             if (GetHabitat(habitatId).GetSensor(deviceId) is null)
                 throw new KeyNotFoundException($"Unknown sensor '{deviceId}'.");
-            sensorInputs.Add((habitatId, deviceId), (read, unit));
+            sensorInputs.Add((habitatId, deviceId), (read, unit, thresholds));
         }
 
         public IReadOnlyList<SensorDisplay> PollHabitatSensors()
@@ -54,13 +60,22 @@ namespace AquaGuard.Core
             {
                 sensorInputs.TryGetValue((habitat.HabitatId, sensor.DeviceId), out var input);
                 double? value = input.Read?.Invoke();
+                DateTimeOffset timestamp = DateTimeOffset.UtcNow;
+                EnvironmentalSeverity? classification = value is double valid && double.IsFinite(valid)
+                    ? input.Thresholds?.Classify(valid) : null;
+                if (classification is { } severity)
+                {
+                    var transition = alertManager.Evaluate(habitat.HabitatId, sensor.DeviceId, severity, timestamp);
+                    if (logger is not null && transition is not null)
+                        pendingAlarmHistory.Add(transition);
+                }
                 var display = new SensorDisplay(habitat.HabitatId, sensor.DeviceId, value)
                 {
                     SensorName = sensor.Name,
-                    Unit = input.Unit
+                    Unit = input.Unit,
+                    Classification = classification
                 };
                 readings.Add(display);
-                DateTimeOffset timestamp = DateTimeOffset.UtcNow;
                 bus.Publish(new SystemMessage(TelemetryKind.SensorReading, display.HabitatId,
                     display.DeviceId, value.HasValue ? display.Reading : null, timestamp.UtcDateTime));
                 if (value is double measured && double.IsFinite(measured))
@@ -79,6 +94,20 @@ namespace AquaGuard.Core
                     SensorLoggingFailed = true;
                 }
             }
+            if (logger is not null && pendingAlarmHistory.Count > 0)
+            {
+                try
+                {
+                    logger.LogAlarmTransitions(pendingAlarmHistory);
+                    pendingAlarmHistory.Clear();
+                    AlarmLoggingFailed = false;
+                }
+                catch (SqliteException)
+                {
+                    AlarmLoggingFailed = true;
+                }
+            }
+
             return readings;
         }
 

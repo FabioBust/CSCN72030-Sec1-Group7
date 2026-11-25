@@ -90,6 +90,23 @@ Keep an empty file for a known sensor whose data is unavailable.
 Use °C for temperature, mg/L for dissolved oxygen, L/min for flow,
 and parts per thousand (ppt) for salinity. pH is dimensionless.
 
+To configure environmental classifications, place a `thresholds.json` file
+in the habitat directory. Each key matches a sensor file name without
+`.txt`. For example, these synthetic temperature thresholds demonstrate
+the format:
+
+```json
+{
+  "temperature": { "WarningLow": 18, "NormalLow": 21, "NormalHigh": 25, "WarningHigh": 28 }
+}
+```
+
+Each range includes its endpoints. Readings within the normal range are
+Normal, readings in the rest of the warning range are Warning, and readings
+outside both ranges are Critical. Missing readings leave active alarms in
+place. Restart AquaGuard after editing the file. Staff history includes
+recorded alarm transitions.
+
 ## Testing
 
 See [Sprint 2 test plans](docs/sprint-2-test-plans.md) for case IDs, SRS coverage, and fixtures.

@@ -7,6 +7,7 @@ namespace AquaGuard.Core
     {
         public string? SensorName { get; init; }
         public string? Unit { get; init; }
+        public EnvironmentalSeverity? Classification { get; init; }
         public string Reading => Value?.ToString(CultureInfo.InvariantCulture) ?? "No Data";
     }
 
