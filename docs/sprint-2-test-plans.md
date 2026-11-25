@@ -128,3 +128,22 @@ habitat selection. The separate UXR01 participant timing case remains unrun.
   failed feeding write leaves the dispenser eligible after storage recovers.
   The retry records one portion and starts the cooldown. The Release suite
   with both database failure tests passed 158 tests.
+
+## US-5 sensor refresh acceptance
+
+Tested the Release dashboard matching merged commit `34242d3` with a synthetic
+reef temperature file. The dashboard initially displayed 21.5 °C. For each
+trial, recorded UTC immediately before writing a new single-record file value
+and again after the dashboard accessibility tree first showed that value with
+unit °C. The interval includes file write and observation overhead.
+
+| New temperature | Observed interval | REQ-NFR-003 |
+| --- | ---: | --- |
+| 22.5 °C | 1,134 ms | Pass |
+| 23.5 °C | 1,324 ms | Pass |
+| 24.5 °C | 1,255 ms | Pass |
+
+The run verifies temperature value and unit display and the three-second
+refresh limit for this fixture. Sequential file looping and configured unit
+metadata are covered by `HabitatFileIntegrationTests`. Environmental
+classification remains pending.
