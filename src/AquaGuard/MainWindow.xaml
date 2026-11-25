@@ -15,6 +15,16 @@
                 <Button x:Name="FeederToggle" Click="ToggleFeeder"/>
                 <Button Content="_Back to mode selection" Click="BackToLogin" Margin="8,0"/>
             </WrapPanel>
+            <WrapPanel Margin="0,0,0,8">
+                <Button x:Name="PumpToggle" Click="TogglePump"/>
+                <Label Content="Pump _speed (%)" Target="{Binding ElementName=PumpSpeed}"/>
+                <TextBox x:Name="PumpSpeed" Width="55"/>
+                <Button x:Name="PumpApply" Content="Apply speed" Click="ApplyPumpSpeed" Margin="8,0"/>
+                <Button x:Name="FilterToggle" Click="ToggleFilter"/>
+                <Label Content="Aerator _output (%)" Target="{Binding ElementName=AeratorOutput}"/>
+                <TextBox x:Name="AeratorOutput" Width="55"/>
+                <Button x:Name="AeratorApply" Content="Apply output" Click="ApplyAeratorOutput" Margin="8,0"/>
+            </WrapPanel>
             <TextBlock x:Name="CommandFeedback" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
         </StackPanel>
         <ListView x:Name="SensorReadings">

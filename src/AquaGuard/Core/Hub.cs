@@ -96,6 +96,15 @@ namespace AquaGuard.Core
             return handleFeeding is not null && bus.SendFeedingRequest(habitat, handleFeeding);
         }
 
+        public void SetEquipmentPercentage(string habitatId, string deviceId, int percentage)
+        {
+            authentication.RequireStaff();
+            var habitat = GetHabitat(habitatId);
+            string setting = controls.SetPercentage(habitat, deviceId, percentage);
+            bus.Publish(new SystemMessage(TelemetryKind.EquipmentState, habitatId, deviceId,
+                $"{setting}: {percentage.ToString(CultureInfo.InvariantCulture)}%", DateTime.UtcNow));
+        }
+
         internal void SetHeaterTarget(string habitatId, string deviceId, decimal target, DataLogger logger)
         {
             authentication.RequireStaff();

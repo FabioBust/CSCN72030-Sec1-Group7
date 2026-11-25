@@ -5,31 +5,14 @@ using System.Text;
 
 namespace AquaGuard.Devices.Equipment
 {
-    public class Aerator
+    public class Aerator : Equipment
     {
-        public string DeviceId { get; }
-        public string HabitatId { get; }
-        public string Name { get; }
-
         public bool IsOn { get; private set; }
 
         public int OutputPercentage { get; private set; }
 
-        public Aerator(string deviceId, string habitatId, string name)
+        public Aerator(string deviceId, string habitatId, string name) : base(deviceId, habitatId, name)
         {
-            if (string.IsNullOrWhiteSpace(deviceId))
-                throw new ArgumentException("Device ID cannot be empty.");
-
-            if (string.IsNullOrWhiteSpace(habitatId))
-                throw new ArgumentException("Habitat ID cannot be empty.");
-
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name cannot be empty.");
-
-            DeviceId = deviceId;
-            HabitatId = habitatId;
-            Name = name;
-
             IsOn = false;
             OutputPercentage = 0;
         }

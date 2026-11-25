@@ -147,3 +147,12 @@ The run verifies temperature value and unit display and the three-second
 refresh limit for this fixture. Sequential file looping and configured unit
 metadata are covered by `HabitatFileIntegrationTests`. Environmental
 classification remains pending.
+
+## AG-48 equipment controls and US-12 feedback
+
+The Staff controls cover pump power and speed (REQ-FUN-006), filter power
+(REQ-FUN-007), and aerator output (REQ-FUN-008). Pump speed and aerator output
+accept whole percentages from 0 to 100 and report the device and setting
+when accepted or identify the rejected input (REQ-FUN-011, REQ-USR-005/006).
+`HubTests` verifies that percentage changes require Staff access, target the
+selected habitat, and publish telemetry only for accepted changes.

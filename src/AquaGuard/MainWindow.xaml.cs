@@ -58,6 +58,16 @@ public partial class MainWindow : Window
         var feeder = SelectedHabitat?.Equipment.OfType<FoodDispenser>().SingleOrDefault();
         FeederToggle.IsEnabled = feeder is not null;
         FeederToggle.Content = feeder?.IsEnabled == true ? "_Disable food dispenser" : "_Enable food dispenser";
+        var pump = SelectedHabitat?.Equipment.OfType<CirculationPump>().SingleOrDefault();
+        PumpToggle.IsEnabled = PumpSpeed.IsEnabled = PumpApply.IsEnabled = pump is not null;
+        PumpToggle.Content = pump?.IsOn == true ? "Turn pump off" : "Turn pump on";
+        PumpSpeed.Text = pump?.SpeedPercentage.ToString(CultureInfo.CurrentCulture) ?? "";
+        var filter = SelectedHabitat?.Equipment.OfType<FilterSystem>().SingleOrDefault();
+        FilterToggle.IsEnabled = filter is not null;
+        FilterToggle.Content = filter?.IsOn == true ? "Turn filter off" : "Turn filter on";
+        var aerator = SelectedHabitat?.Equipment.OfType<Aerator>().SingleOrDefault();
+        AeratorOutput.IsEnabled = AeratorApply.IsEnabled = aerator is not null;
+        AeratorOutput.Text = aerator?.OutputPercentage.ToString(CultureInfo.CurrentCulture) ?? "";
         CommandFeedback.Text = "";
     }
 
@@ -109,5 +119,49 @@ public partial class MainWindow : Window
     {
         returnToLogin();
         Close();
+    }
+
+    private void TogglePump(object sender, RoutedEventArgs e)
+    {
+        if (SelectedHabitat is not { } habitat ||
+            habitat.Equipment.OfType<CirculationPump>().SingleOrDefault() is not { } pump)
+            return;
+
+        hub.SetEquipmentPower(habitat.HabitatId, pump.DeviceId, !pump.IsOn);
+        PumpToggle.Content = pump.IsOn ? "Turn pump off" : "Turn pump on";
+        CommandFeedback.Text = $"{pump.Name}: {(pump.IsOn ? "on" : "off")}.";
+    }
+
+    private void ToggleFilter(object sender, RoutedEventArgs e)
+    {
+        if (SelectedHabitat is not { } habitat ||
+            habitat.Equipment.OfType<FilterSystem>().SingleOrDefault() is not { } filter)
+            return;
+
+        hub.SetEquipmentPower(habitat.HabitatId, filter.DeviceId, !filter.IsOn);
+        FilterToggle.Content = filter.IsOn ? "Turn filter off" : "Turn filter on";
+        CommandFeedback.Text = $"{filter.Name}: {(filter.IsOn ? "on" : "off")}.";
+    }
+
+    private void ApplyPumpSpeed(object sender, RoutedEventArgs e) =>
+        ApplyPercentage(SelectedHabitat?.Equipment.OfType<CirculationPump>().SingleOrDefault(), "speed", PumpSpeed.Text);
+
+    private void ApplyAeratorOutput(object sender, RoutedEventArgs e) =>
+        ApplyPercentage(SelectedHabitat?.Equipment.OfType<Aerator>().SingleOrDefault(), "output", AeratorOutput.Text);
+
+    private void ApplyPercentage(AquaGuard.Devices.IDevice? device, string setting, string input)
+    {
+        if (device is null)
+            return;
+
+        if (!int.TryParse(input, NumberStyles.Integer, CultureInfo.CurrentCulture, out int percentage)
+            || percentage is < 0 or > 100)
+        {
+            CommandFeedback.Text = $"Invalid {device.Name} {setting} “{input}”. Enter a whole number from 0 to 100.";
+            return;
+        }
+
+        hub.SetEquipmentPercentage(device.HabitatId, device.DeviceId, percentage);
+        CommandFeedback.Text = $"{device.Name} {setting}: {percentage}%.";
     }
 }
