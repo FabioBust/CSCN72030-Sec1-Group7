@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
 using AquaGuard.Data;
 using AquaGuard.Devices;
 using AquaGuard.Devices.Equipment;
@@ -17,6 +18,7 @@ public static class HabitatFileSources
         foreach (string directory in Directory.GetDirectories(root).Order())
         {
             var habitat = new Habitat(Path.GetFileName(directory), Path.GetFileName(directory));
+            var thresholds = LoadThresholds(hub, directory);
             habitat.AddEquipment(new CirculationPump("circulation-pump", habitat.HabitatId, "Circulation pump"));
             habitat.AddEquipment(new FilterSystem("filter-system", habitat.HabitatId, "Filter system"));
             habitat.AddEquipment(new Aerator("aerator", habitat.HabitatId, "Aerator"));
@@ -72,9 +74,31 @@ public static class HabitatFileSources
                     };
                 }
                 habitat.AddSensor(sensor);
-                hub.RegisterSensorInput(habitat.HabitatId, id, read, unit);
+                hub.RegisterSensorInput(habitat.HabitatId, id, read, unit, thresholds.GetValueOrDefault(id));
             }
         }
+    }
+
+    private static Dictionary<string, SensorThresholds> LoadThresholds(Hub hub, string directory)
+    {
+        string path = Path.Combine(directory, "thresholds.json");
+        if (File.Exists(path))
+        {
+            try
+            {
+                var thresholds = JsonSerializer.Deserialize<Dictionary<string, SensorThresholds>>(File.ReadAllText(path));
+                if (thresholds is not null && thresholds.Values.All(value => value is { IsValid: true }))
+                    return thresholds;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                // The monitoring view reports the invalid or unreadable configuration.
+            }
+
+            hub.ThresholdConfigurationFailed = true;
+        }
+
+        return [];
     }
 
     private sealed record FileSensor(string DeviceId, string HabitatId, string Name) : IDevice;

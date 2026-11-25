@@ -192,3 +192,14 @@ ordering. In the running Release app, kelp showed the no-records message.
 Reef showed a logged 22.5 °C heater target and timestamped 23.5 °C sensor
 readings. Alarm history remains pending until alarm events are persisted.
 The Release suite passed 172 tests.
+
+## Environmental classification and alarm history
+
+`HabitatFileIntegrationTests` covers REQ-FUN-013–016 and alarm-history retrieval
+under REQ-FUN-017. A configured temperature moves from Normal to Warning to
+Critical and back to Normal. The test checks inclusive boundary values, one
+active alarm, no duplicate transition at unchanged severity, and preservation
+of the active alarm when a reading is missing. It verifies habitat isolation,
+database retry, and the raised, updated, and resolved records in Staff history.
+Thresholds are loaded from per-habitat files. Editing thresholds in Staff Mode
+(REQ-FUN-012) and manual alarm-display acceptance remain pending.

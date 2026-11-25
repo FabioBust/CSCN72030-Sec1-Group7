@@ -43,10 +43,21 @@ public partial class MainWindow : Window
         latestReadings = hub.PollHabitatSensors();
         ShowSelectedReadings();
         SensorLoggingStatus.Text = hub.SensorLoggingFailed ? "Sensor history could not be saved to SQLite." : "";
+        AlarmStatus.Text = string.Join(" ", new[]
+        {
+            hub.ThresholdConfigurationFailed ? "Some threshold settings could not be loaded." : "",
+            hub.AlarmLoggingFailed ? "Alarm history is waiting for SQLite storage." : ""
+        }.Where(message => message.Length > 0));
     }
 
-    private void ShowSelectedReadings() =>
+    private void ShowSelectedReadings()
+    {
         SensorReadings.ItemsSource = latestReadings.Where(r => r.HabitatId == SelectedHabitat?.HabitatId).ToList();
+        var alarms = hub.ActiveAlerts.Where(alert => alert.HabitatId == SelectedHabitat?.HabitatId)
+            .Select(alert => $"{alert.HabitatId} / {alert.DeviceId} — {alert.Severity} at {alert.Timestamp:yyyy-MM-dd HH:mm:ss} UTC")
+            .ToList();
+        ActiveAlarms.ItemsSource = alarms.Count == 0 ? ["No active alarms."] : alarms;
+    }
 
     private void SelectHabitat(object sender, RoutedEventArgs e) => UpdateSelection();
 
