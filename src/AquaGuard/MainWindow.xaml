@@ -5,6 +5,18 @@
     <DockPanel Margin="28">
         <TextBlock DockPanel.Dock="Top" Text="Staff Dashboard" FontSize="24" Margin="0,0,0,16"/>
         <TextBlock x:Name="SensorStatus" DockPanel.Dock="Top" Margin="0,0,0,8"/>
+        <StackPanel DockPanel.Dock="Top">
+            <Label Content="_Habitat" Target="{Binding ElementName=HabitatSelection}"/>
+            <ComboBox x:Name="HabitatSelection" DisplayMemberPath="Name" SelectionChanged="SelectHabitat"/>
+            <WrapPanel Margin="0,8">
+                <Label Content="_Target (°C)" Target="{Binding ElementName=HeaterTarget}"/>
+                <TextBox x:Name="HeaterTarget" Width="75"/>
+                <Button Content="_Apply heater target" Click="ApplyTarget" Margin="8,0"/>
+                <Button x:Name="FeederToggle" Click="ToggleFeeder"/>
+                <Button Content="_Back to mode selection" Click="BackToLogin" Margin="8,0"/>
+            </WrapPanel>
+            <TextBlock x:Name="CommandFeedback" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
         <ListView x:Name="SensorReadings">
             <ListView.View>
                 <GridView>

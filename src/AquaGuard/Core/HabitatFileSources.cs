@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using AquaGuard.Data;
 using AquaGuard.Devices;
+using AquaGuard.Devices.Equipment;
 using AquaGuard.Devices.Sensors;
 
 namespace AquaGuard.Core;
@@ -9,11 +10,15 @@ namespace AquaGuard.Core;
 // Adapts external files to the existing sensor APIs without changing their contracts.
 public static class HabitatFileSources
 {
-    public static void Load(Hub hub, string root)
+    public static void Load(Hub hub, string root) => Load(hub, root, null);
+
+    internal static void Load(Hub hub, string root, DataLogger? logger)
     {
         foreach (string directory in Directory.GetDirectories(root).Order())
         {
             var habitat = new Habitat(Path.GetFileName(directory), Path.GetFileName(directory));
+            habitat.AddEquipment(new HeaterChiller("heater-chiller", habitat.HabitatId, "Heater/chiller"));
+            habitat.AddEquipment(new FoodDispenser("food-dispenser", habitat.HabitatId, "Food dispenser") { Logger = logger });
             hub.RegisterHabitat(habitat);
             foreach (string path in Directory.GetFiles(directory, "*.txt").Order())
             {

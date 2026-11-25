@@ -69,8 +69,14 @@ the digest is missing or malformed. Visitor Mode is available without a code.
 The Hub routes equipment power commands to the registered habitat and device.
 The Data Transit Bus publishes sensor readings and equipment state with habitat
 ID, device ID, value/state, and timestamp. A missing sensor reading carries a
-null value. Feeding requests require a staff session and a feeding handler.
-The application does not yet register a physical or simulated feeder.
+null value. The internal staff feeding route requires a staff session and a feeding handler.
+Configured habitats register a simulated heater/chiller and food dispenser.
+Staff can apply heater targets and enable or disable the dispenser. Visitor Mode
+offers simulated CAD $2.00 feed requests for eligible habitats.
+
+Set `AQUAGUARD_DATABASE_PATH` to select a SQLite file for heater target changes
+and feeding events. The default is `aquaguard.db` in the working directory.
+Feeding history survives restart. Each dispenser starts disabled.
 
 ## Simulated sensor files
 
@@ -81,6 +87,8 @@ dashboard discovers the files when it opens and polls them once per second.
 Keep an empty file for a known sensor whose data is unavailable.
 
 ## Testing
+
+See [Sprint 2 test plans](docs/sprint-2-test-plans.md) for case IDs, SRS coverage, and fixtures.
 
 The project will use both automated and manual testing.
 

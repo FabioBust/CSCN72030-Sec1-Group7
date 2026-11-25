@@ -5,6 +5,11 @@
         WindowStartupLocation="CenterScreen">
     <StackPanel Margin="28">
         <TextBlock Text="Visitor Mode" FontSize="24"/>
+        <Label Content="_Habitat" Target="{Binding ElementName=HabitatSelection}"/>
+        <ComboBox x:Name="HabitatSelection" DisplayMemberPath="Name" SelectionChanged="SelectHabitat"/>
+        <TextBlock x:Name="FeedingStatus" Margin="0,8"/>
+        <Button x:Name="FeedButton" Content="Simulate $2.00 donation and feed" IsEnabled="False"
+                HorizontalAlignment="Left" Padding="8" Click="Feed"/>
         <Button Content="_Back to mode selection" Click="BackToLogin"
                 HorizontalAlignment="Left" Padding="8" Margin="0,16,0,0"/>
     </StackPanel>
