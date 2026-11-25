@@ -26,16 +26,19 @@ public static class HabitatFileSources
                 var provider = new FileDataProvider(path);
                 IDevice sensor;
                 Func<double?> read;
+                string? unit = null;
                 if (id.Equals("temperature", StringComparison.OrdinalIgnoreCase))
                 {
                     var temperature = new TemperatureSensor(id, habitat.HabitatId, id, provider);
                     sensor = temperature;
+                    unit = TemperatureSensor.Unit;
                     read = () => { temperature.ReadNextReading(); return temperature.CurrentTemperature; };
                 }
                 else if (id.Equals("oxygen", StringComparison.OrdinalIgnoreCase))
                 {
                     var oxygen = new OxygenSensor(id, habitat.HabitatId, id, provider);
                     sensor = oxygen;
+                    unit = OxygenSensor.Unit;
                     read = () => { oxygen.ReadNextReading(); return oxygen.CurrentOxygen; };
                 }
                 else
@@ -48,10 +51,10 @@ public static class HabitatFileSources
                             sensor = ph; update = ph.UpdateReading; break;
                         case "flow":
                             var flow = new FlowSensor(id, habitat.HabitatId, id);
-                            sensor = flow; update = flow.UpdateReading; break;
+                            sensor = flow; update = flow.UpdateReading; unit = "L/min"; break;
                         case "salinity":
                             var salinity = new SalinitySensor(id, habitat.HabitatId, id);
-                            sensor = salinity; update = salinity.UpdateReading; break;
+                            sensor = salinity; update = salinity.UpdateReading; unit = "ppt"; break;
                         default:
                             sensor = new FileSensor(id, habitat.HabitatId, id);
                             update = _ => { }; break;
@@ -66,7 +69,7 @@ public static class HabitatFileSources
                     };
                 }
                 habitat.AddSensor(sensor);
-                hub.RegisterSensorInput(habitat.HabitatId, id, read);
+                hub.RegisterSensorInput(habitat.HabitatId, id, read, unit);
             }
         }
     }

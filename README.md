@@ -85,6 +85,8 @@ a subdirectory and each sensor in a `.txt` file named after its device ID, such 
 `reef/temperature.txt`. Use one invariant-culture number per line. The staff
 dashboard discovers the files when it opens and polls them once per second.
 Keep an empty file for a known sensor whose data is unavailable.
+Use °C for temperature, mg/L for dissolved oxygen, L/min for flow,
+and parts per thousand (ppt) for salinity. pH is dimensionless.
 
 ## Testing
 

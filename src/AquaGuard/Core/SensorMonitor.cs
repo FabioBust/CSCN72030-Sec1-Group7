@@ -5,6 +5,8 @@ namespace AquaGuard.Core
 {
     public sealed record SensorDisplay(string HabitatId, string DeviceId, double? Value)
     {
+        public string? SensorName { get; init; }
+        public string? Unit { get; init; }
         public string Reading => Value?.ToString(CultureInfo.InvariantCulture) ?? "No Data";
     }
 
