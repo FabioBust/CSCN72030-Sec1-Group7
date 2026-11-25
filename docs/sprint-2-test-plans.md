@@ -156,3 +156,14 @@ accept whole percentages from 0 to 100 and report the device and setting
 when accepted or identify the rejected input (REQ-FUN-011, REQ-USR-005/006).
 `HubTests` verifies that percentage changes require Staff access, target the
 selected habitat, and publish telemetry only for accepted changes.
+
+### Manual Staff feedback verification
+
+On the Release build matching merged commit b402ed1, used synthetic kelp and
+reef habitats. In kelp, the Staff dashboard confirmed pump speed 40%, aerator
+output 60%, pump power on, and filter power on. The app rejected pump speed
+101 and aerator output -1 and named each invalid input. Reef still showed
+default values. Switching back to kelp showed 40% and 60%, with both power
+settings still on. These observations cover the AG-48 / US-12 feedback and
+habitat-routing cases for the added controls. SQLite logging for these
+controls remains pending under REQ-FUN-016.
