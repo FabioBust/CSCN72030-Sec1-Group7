@@ -51,6 +51,64 @@ namespace AquaGuard.Core
             sensorInputs.Add((habitatId, deviceId), (read, unit, thresholds));
         }
 
+
+        internal void SetSensorThresholds(
+            string habitatId,
+            string deviceId,
+            SensorThresholds thresholds)
+        {
+            // Only staff can change thresholds
+            authentication.RequireStaff();
+
+            ArgumentNullException.ThrowIfNull(thresholds);
+
+            // Validate the threshold values
+            if (!thresholds.IsValid)
+            {
+                throw new ArgumentException(
+                    "Invalid sensor threshold values.",
+                    nameof(thresholds));
+            }
+
+            var habitat = GetHabitat(habitatId);
+
+            // Check that the sensor exists
+            if (habitat.GetSensor(deviceId) is null)
+            {
+                throw new KeyNotFoundException(
+                    $"Unknown sensor '{deviceId}'.");
+            }
+
+            var key = (habitatId, deviceId);
+
+            if (!sensorInputs.TryGetValue(key, out var input))
+            {
+                throw new InvalidOperationException(
+                    "Sensor input is not registered.");
+            }
+
+            // Update thresholds without changing the sensor input
+            sensorInputs[key] = (
+                input.Read,
+                input.Unit,
+                thresholds);
+        }
+
+        internal SensorThresholds? GetSensorThresholds(
+            string habitatId,
+            string deviceId)
+        {
+            authentication.RequireStaff();
+
+            if (sensorInputs.TryGetValue(
+                (habitatId, deviceId), out var input))
+            {
+                return input.Thresholds;
+            }
+
+            return null;
+        }
+
         public IReadOnlyList<SensorDisplay> PollHabitatSensors()
         {
             var readings = new List<SensorDisplay>();

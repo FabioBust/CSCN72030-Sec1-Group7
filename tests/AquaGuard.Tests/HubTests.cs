@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using AquaGuard.Core;
 using AquaGuard.Devices.Equipment;
+using AquaGuard.Devices.Sensors;
 using AquaGuard.Models;
 
 namespace AquaGuard.Tests
@@ -109,5 +110,151 @@ namespace AquaGuard.Tests
             Assert.IsFalse(hub.RequestFeeding("reef"));
             Assert.AreSame(habitat, requested);
         }
+
+
+
+        [TestMethod]
+        public void StaffCanConfigureSensorThresholds()
+        {
+            var sensor = new PHSensor(
+                "ph", "reef", "pH Sensor");
+
+            habitat.AddSensor(sensor);
+
+            var hub = new Hub(authentication, bus, [habitat]);
+
+            hub.RegisterSensorInput("reef", "ph", () => 7.2);
+
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+
+            var thresholds = new SensorThresholds
+            {
+                WarningLow = 6.0,
+                NormalLow = 6.5,
+                NormalHigh = 8.0,
+                WarningHigh = 8.5
+            };
+
+            hub.SetSensorThresholds(
+                "reef", "ph", thresholds);
+
+            var result = hub.GetSensorThresholds(
+                "reef", "ph");
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(6.0, result.WarningLow);
+            Assert.AreEqual(6.5, result.NormalLow);
+            Assert.AreEqual(8.0, result.NormalHigh);
+            Assert.AreEqual(8.5, result.WarningHigh);
+        }
+
+
+
+        [TestMethod]
+        public void VisitorCannotConfigureSensorThresholds()
+        {
+            var hub = new Hub(authentication, bus, [habitat]);
+
+            var thresholds = new SensorThresholds
+            {
+                WarningLow = 20,
+                NormalLow = 23,
+                NormalHigh = 27,
+                WarningHigh = 30
+            };
+
+            Assert.ThrowsExactly<UnauthorizedAccessException>(
+                () => hub.SetSensorThresholds(
+                    "reef", "temperature", thresholds));
+        }
+
+
+        [TestMethod]
+        public void InvalidSensorThresholdsAreRejected()
+        {
+            var hub = new Hub(authentication, bus, [habitat]);
+
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+
+            var thresholds = new SensorThresholds
+            {
+                WarningLow = 20,
+                NormalLow = 28,
+                NormalHigh = 23,
+                WarningHigh = 30
+            };
+
+            Assert.ThrowsExactly<ArgumentException>(
+                () => hub.SetSensorThresholds(
+                    "reef", "temperature", thresholds));
+        }
+
+
+        [TestMethod]
+        public void UpdatedThresholdsChangeSensorClassification()
+        {
+            var sensor = new PHSensor(
+                "ph", "reef", "pH Sensor");
+
+            habitat.AddSensor(sensor);
+
+            var hub = new Hub(authentication, bus, [habitat]);
+
+            hub.RegisterSensorInput("reef", "ph", () => 7.2);
+
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+
+            hub.SetSensorThresholds("reef", "ph",
+                new SensorThresholds
+                {
+                    WarningLow = 6.0,
+                    NormalLow = 6.5,
+                    NormalHigh = 8.0,
+                    WarningHigh = 8.5
+                });
+
+            var reading = hub.PollHabitatSensors().Single();
+
+            Assert.AreEqual(
+                EnvironmentalSeverity.Normal,
+                reading.Classification);
+
+            hub.SetSensorThresholds("reef", "ph",
+                new SensorThresholds
+                {
+                    WarningLow = 6.0,
+                    NormalLow = 6.5,
+                    NormalHigh = 7.0,
+                    WarningHigh = 7.1
+                });
+
+            reading = hub.PollHabitatSensors().Single();
+
+            Assert.AreEqual(
+                EnvironmentalSeverity.Critical,
+                reading.Classification);
+        }
+
+
+        [TestMethod]
+        public void CannotConfigureUnknownSensor()
+        {
+            var hub = new Hub(authentication, bus, [habitat]);
+
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+
+            var thresholds = new SensorThresholds
+            {
+                WarningLow = 6.0,
+                NormalLow = 6.5,
+                NormalHigh = 8.0,
+                WarningHigh = 8.5
+            };
+
+            Assert.ThrowsExactly<KeyNotFoundException>(
+                () => hub.SetSensorThresholds(
+                    "reef", "unknown", thresholds));
+        }
+
     }
 }
