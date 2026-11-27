@@ -25,6 +25,7 @@ public static class HabitatFileSources
             habitat.AddEquipment(new HeaterChiller("heater-chiller", habitat.HabitatId, "Heater/chiller"));
             habitat.AddEquipment(new FoodDispenser("food-dispenser", habitat.HabitatId, "Food dispenser") { Logger = logger });
             hub.RegisterHabitat(habitat);
+            hub.RegisterThresholdDirectory(habitat.HabitatId, directory);
             foreach (string path in Directory.GetFiles(directory, "*.txt").Order())
             {
                 string id = Path.GetFileNameWithoutExtension(path);
@@ -78,6 +79,47 @@ public static class HabitatFileSources
             }
         }
     }
+
+
+    internal static void SaveThresholds(
+        string directory,
+        Dictionary<string, SensorThresholds> thresholds)
+    {
+        if (thresholds.Values.Any(value => !value.IsValid))
+        {
+            throw new ArgumentException(
+                "Invalid sensor threshold values.");
+        }
+
+        string path = Path.Combine(
+            directory, "thresholds.json");
+
+        string temporaryPath = Path.Combine(
+            directory, $"{Guid.NewGuid()}.tmp");
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+
+        string json = JsonSerializer.Serialize(
+            thresholds, options);
+
+        try
+        {
+            File.WriteAllText(temporaryPath, json);
+
+            File.Move(temporaryPath, path, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
+    }
+
 
     private static Dictionary<string, SensorThresholds> LoadThresholds(Hub hub, string directory)
     {
