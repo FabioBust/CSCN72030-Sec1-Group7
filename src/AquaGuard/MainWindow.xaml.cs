@@ -79,7 +79,13 @@ public partial class MainWindow : Window
         FilterToggle.IsEnabled = filter is not null;
         FilterToggle.Content = filter?.IsOn == true ? "Turn filter off" : "Turn filter on";
         var aerator = SelectedHabitat?.Equipment.OfType<Aerator>().SingleOrDefault();
+        AeratorToggle.IsEnabled = aerator is not null;
+        AeratorToggle.Content = aerator?.IsOn == true ? "Turn aerator off" : "Turn aerator on";
         AeratorOutput.IsEnabled = AeratorApply.IsEnabled = aerator is not null;
+        System.Diagnostics.Debug.WriteLine($"Selected habitat: {SelectedHabitat?.HabitatId ?? "None"}");
+        System.Diagnostics.Debug.WriteLine($"Equipment count: {SelectedHabitat?.Equipment.Count()}");
+        System.Diagnostics.Debug.WriteLine($"Aerator found: {aerator is not null}");
+        System.Diagnostics.Debug.WriteLine($"Aerator button enabled: {AeratorToggle.IsEnabled}");
         AeratorOutput.Text = aerator?.OutputPercentage.ToString(CultureInfo.CurrentCulture) ?? "";
         CommandFeedback.Text = "";
     }
@@ -165,11 +171,37 @@ public partial class MainWindow : Window
         CommandFeedback.Text = $"{filter.Name}: {(filter.IsOn ? "on" : "off")}.";
     }
 
+    private void ToggleAerator(object sender, RoutedEventArgs e)
+    {
+        if (SelectedHabitat is not { } habitat || habitat.Equipment.OfType<Aerator>().SingleOrDefault() is not { } aerator)
+        {
+            return;
+        }
+
+        if (!TryApplyLoggedChange(aerator.Name, () => hub.SetEquipmentPower(habitat.HabitatId, aerator.DeviceId, !aerator.IsOn)))
+        {
+            return;
+        }
+        AeratorToggle.Content = aerator.IsOn ? "Turn aerator off" : "Turn aerator on";
+        AeratorOutput.Text = aerator.OutputPercentage.ToString(CultureInfo.CurrentCulture);
+        CommandFeedback.Text = $"{aerator.Name}: {(aerator.IsOn ? "on" : "off")}.";
+    }
+
+
     private void ApplyPumpSpeed(object sender, RoutedEventArgs e) =>
         ApplyPercentage(SelectedHabitat?.Equipment.OfType<CirculationPump>().SingleOrDefault(), "speed", PumpSpeed.Text);
 
-    private void ApplyAeratorOutput(object sender, RoutedEventArgs e) =>
-        ApplyPercentage(SelectedHabitat?.Equipment.OfType<Aerator>().SingleOrDefault(), "output", AeratorOutput.Text);
+
+    private void ApplyAeratorOutput(object sender, RoutedEventArgs e)
+    {
+        var aerator = SelectedHabitat?.Equipment.OfType<Aerator>().SingleOrDefault();
+        ApplyPercentage(aerator, "output", AeratorOutput.Text);
+        if (aerator is not null)
+        {
+            AeratorToggle.Content = aerator.IsOn ? "Turn aerator off" : "Turn aerator on";
+            AeratorOutput.Text = aerator.OutputPercentage.ToString(CultureInfo.CurrentCulture);
+        }
+    }
 
     private void ApplyPercentage(AquaGuard.Devices.IDevice? device, string setting, string input)
     {

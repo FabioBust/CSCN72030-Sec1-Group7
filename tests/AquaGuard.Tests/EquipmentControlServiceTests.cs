@@ -38,5 +38,82 @@ namespace AquaGuard.Tests
 
             Assert.IsTrue(pump.IsOn);
         }
+
+
+        [TestMethod]
+        public void StaffCanTurnOnAerator()
+        {
+            var authentication = new AuthenticationService(CodeHash);
+            var controls = new EquipmentControlService(authentication);
+
+            var habitat = new Habitat("H1", "Reef");
+            var aerator = new Aerator("A1", "H1", "Aerator");
+
+            habitat.AddEquipment(aerator);
+
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+
+            controls.SetPower(habitat, "A1", true);
+
+            Assert.IsTrue(aerator.IsOn);
+            Assert.AreEqual(100, aerator.OutputPercentage);
+        }
+
+        [TestMethod]
+        public void StaffCanTurnOffAerator()
+        {
+            var authentication = new AuthenticationService(CodeHash);
+            var controls = new EquipmentControlService(authentication);
+
+            var habitat = new Habitat("H1", "Reef");
+            var aerator = new Aerator("A1", "H1", "Aerator");
+
+            habitat.AddEquipment(aerator);
+
+            Assert.IsTrue(authentication.TrySignIn("test-code"));
+
+            aerator.TurnOn();
+
+            controls.SetPower(habitat, "A1", false);
+
+            Assert.IsFalse(aerator.IsOn);
+            Assert.AreEqual(0, aerator.OutputPercentage);
+        }
+
+        [TestMethod]
+        public void VisitorCannotTurnOnAerator()
+        {
+            var authentication = new AuthenticationService(CodeHash);
+            var controls = new EquipmentControlService(authentication);
+
+            var habitat = new Habitat("H1", "Reef");
+            var aerator = new Aerator("A1", "H1", "Aerator");
+
+            habitat.AddEquipment(aerator);
+
+            Assert.ThrowsExactly<UnauthorizedAccessException>(
+                () => controls.SetPower(habitat, "A1", true));
+
+            Assert.IsFalse(aerator.IsOn);
+        }
+
+        [TestMethod]
+        public void VisitorCannotTurnOffAerator()
+        {
+            var authentication = new AuthenticationService(CodeHash);
+            var controls = new EquipmentControlService(authentication);
+
+            var habitat = new Habitat("H1", "Reef");
+            var aerator = new Aerator("A1", "H1", "Aerator");
+
+            habitat.AddEquipment(aerator);
+            aerator.TurnOn();
+
+            Assert.ThrowsExactly<UnauthorizedAccessException>(
+                () => controls.SetPower(habitat, "A1", false));
+
+            Assert.IsTrue(aerator.IsOn);
+        }
+
     }
 }

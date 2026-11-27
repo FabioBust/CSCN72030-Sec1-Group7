@@ -49,30 +49,50 @@ namespace AquaGuard.Core
                 logger?.LogEquipmentSetting(device.HabitatId, device.DeviceId, setting, isOn ? "On" : "Off");
         }
 
+
         public void SetPower(Habitat habitat, string deviceId, bool isOn)
         {
             authentication.RequireStaff();
 
             IDevice? equipment = habitat.GetEquipment(deviceId);
+
             switch (equipment)
             {
                 case CirculationPump pump:
                     LogPower(pump, "power", pump.IsOn, isOn);
+
                     if (isOn) pump.TurnOn();
                     else pump.TurnOff();
+
                     break;
+
                 case FilterSystem filter:
                     LogPower(filter, "power", filter.IsOn, isOn);
+
                     if (isOn) filter.TurnOn();
                     else filter.TurnOff();
+
                     break;
+
+                case Aerator aerator:
+                    LogPower(aerator, "power", aerator.IsOn, isOn);
+
+                    if (isOn) aerator.TurnOn();
+                    else aerator.TurnOff();
+
+                    break;
+
                 case FoodDispenser dispenser:
                     LogPower(dispenser, "enabled", dispenser.IsEnabled, isOn);
                     dispenser.SetEnabled(isOn);
+
                     break;
+
                 default:
-                    throw new InvalidOperationException("No controllable equipment matches the device ID.");
+                    throw new InvalidOperationException(
+                        "No controllable equipment matches the device ID.");
             }
         }
+
     }
 }
