@@ -9,6 +9,7 @@ using AquaGuard.Data;
 using AquaGuard.Devices;
 using AquaGuard.Devices.Equipment;
 using Microsoft.Data.Sqlite;
+using System.IO;
 
 namespace AquaGuard;
 
@@ -680,7 +681,12 @@ public partial class MainWindow : Window
         catch (UnauthorizedAccessException)
         {
             ThresholdFeedback.Text =
-                "Only staff can change sensor thresholds.";
+                "Access denied. Check staff permissions and file access.";
+        }
+        catch (IOException)
+        {
+            ThresholdFeedback.Text =
+                "Could not save thresholds. Previous settings were kept.";
         }
         catch (InvalidOperationException ex)
         {

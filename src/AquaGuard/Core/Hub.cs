@@ -51,48 +51,57 @@ namespace AquaGuard.Core
             sensorInputs.Add((habitatId, deviceId), (read, unit, thresholds));
         }
 
+        private readonly Dictionary<string, string> thresholdDirectories = new();
 
-        internal void SetSensorThresholds(
-            string habitatId,
-            string deviceId,
-            SensorThresholds thresholds)
+        internal void RegisterThresholdDirectory( string habitatId, string directory)
+        {
+            thresholdDirectories[habitatId] = directory;
+        }
+
+
+        internal void SetSensorThresholds(string habitatId, string deviceId, SensorThresholds thresholds)
         {
             // Only staff can change thresholds
             authentication.RequireStaff();
-
             ArgumentNullException.ThrowIfNull(thresholds);
-
-            // Validate the threshold values
+            // Validate threshold values
             if (!thresholds.IsValid)
             {
-                throw new ArgumentException(
-                    "Invalid sensor threshold values.",
-                    nameof(thresholds));
+                throw new ArgumentException("Invalid sensor threshold values.", nameof(thresholds));
             }
-
             var habitat = GetHabitat(habitatId);
-
-            // Check that the sensor exists
+            // Check whether the sensor exists
             if (habitat.GetSensor(deviceId) is null)
             {
-                throw new KeyNotFoundException(
-                    $"Unknown sensor '{deviceId}'.");
+                throw new KeyNotFoundException($"Unknown sensor '{deviceId}'.");
             }
-
             var key = (habitatId, deviceId);
-
             if (!sensorInputs.TryGetValue(key, out var input))
             {
-                throw new InvalidOperationException(
-                    "Sensor input is not registered.");
+                throw new InvalidOperationException("Sensor input is not registered.");
             }
+            // Save thresholds for file-based habitats
+            if (thresholdDirectories.TryGetValue(habitatId, out string? directory))
+            {
+                var configuration = new Dictionary<string, SensorThresholds>();
+                // Preserve other configured sensors
+                foreach (var entry in sensorInputs)
+                {
+                    if (entry.Key.Item1 == habitatId && entry.Value.Thresholds is { } existing)
+                    {
+                        configuration[entry.Key.Item2] = existing;
+                    }
+                }
 
-            // Update thresholds without changing the sensor input
-            sensorInputs[key] = (
-                input.Read,
-                input.Unit,
-                thresholds);
+                // Add or replace the selected sensor
+                configuration[deviceId] = thresholds;
+                // Save before updating memory
+                HabitatFileSources.SaveThresholds(directory, configuration);
+            }
+            // Update thresholds in memory
+            sensorInputs[key] = (input.Read, input.Unit, thresholds);
         }
+
 
         internal SensorThresholds? GetSensorThresholds(
             string habitatId,
