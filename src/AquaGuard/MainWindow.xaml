@@ -1,49 +1,215 @@
 <Window x:Class="AquaGuard.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AquaGuard | Staff Dashboard" Height="520" Width="900">
+        Title="AquaGuard | Staff Dashboard"
+        Height="700" Width="900">
+
     <DockPanel Margin="28">
-        <TextBlock DockPanel.Dock="Top" Text="Staff Dashboard" FontSize="24" Margin="0,0,0,16"/>
-        <TextBlock x:Name="SensorStatus" DockPanel.Dock="Top" Margin="0,0,0,8"/>
-        <TextBlock x:Name="SensorLoggingStatus" DockPanel.Dock="Top" TextWrapping="Wrap"/>
-        <TextBlock x:Name="AlarmStatus" DockPanel.Dock="Top" TextWrapping="Wrap"/>
+
+        <TextBlock DockPanel.Dock="Top"
+                   Text="Staff Dashboard"
+                   FontSize="24"
+                   Margin="0,0,0,16"/>
+
+        <TextBlock x:Name="SensorStatus"
+                   DockPanel.Dock="Top"
+                   Margin="0,0,0,8"/>
+
+        <TextBlock x:Name="SensorLoggingStatus"
+                   DockPanel.Dock="Top"
+                   TextWrapping="Wrap"/>
+
+        <TextBlock x:Name="AlarmStatus"
+                   DockPanel.Dock="Top"
+                   TextWrapping="Wrap"/>
+
         <StackPanel DockPanel.Dock="Top">
-            <Label Content="_Habitat" Target="{Binding ElementName=HabitatSelection}"/>
-            <ComboBox x:Name="HabitatSelection" DisplayMemberPath="Name" SelectionChanged="SelectHabitat"/>
+
+            <!-- Habitat Selection -->
+
+            <Label Content="_Habitat"
+                   Target="{Binding ElementName=HabitatSelection}"/>
+
+            <ComboBox x:Name="HabitatSelection"
+                      DisplayMemberPath="Name"
+                      SelectionChanged="SelectHabitat"/>
+
+            <!-- Heater and Feeder Controls -->
+
             <WrapPanel Margin="0,8">
-                <Label Content="_Target (°C)" Target="{Binding ElementName=HeaterTarget}"/>
-                <TextBox x:Name="HeaterTarget" Width="75"/>
-                <Button Content="_Apply heater target" Click="ApplyTarget" Margin="8,0"/>
-                <Button x:Name="FeederToggle" Click="ToggleFeeder"/>
-                <Button x:Name="HistoryButton" Content="View histor_y" Click="ShowHistory" Margin="8,0,0,0"/>
-                <Button Content="_Back to mode selection" Click="BackToLogin" Margin="8,0"/>
+
+                <Label Content="_Target (°C)"
+                       Target="{Binding ElementName=HeaterTarget}"/>
+
+                <TextBox x:Name="HeaterTarget"
+                         Width="75"/>
+
+                <Button Content="_Apply heater target"
+                        Click="ApplyTarget"
+                        Margin="8,0"/>
+
+                <Button x:Name="FeederToggle"
+                        Click="ToggleFeeder"/>
+
+                <Button x:Name="HistoryButton"
+                        Content="View histor_y"
+                        Click="ShowHistory"
+                        Margin="8,0,0,0"/>
+
+                <Button Content="_Back to mode selection"
+                        Click="BackToLogin"
+                        Margin="8,0"/>
+
             </WrapPanel>
+
+            <!-- Equipment Controls -->
+
             <WrapPanel Margin="0,0,0,8">
-                <Button x:Name="PumpToggle" Click="TogglePump"/>
-                <Label Content="Pump _speed (%)" Target="{Binding ElementName=PumpSpeed}"/>
-                <TextBox x:Name="PumpSpeed" Width="55"/>
-                <Button x:Name="PumpApply" Content="Apply speed" Click="ApplyPumpSpeed" Margin="8,0"/>
-                <Button x:Name="FilterToggle" Click="ToggleFilter"/>
-                <Button x:Name="AeratorToggle" Click="ToggleAerator"/>
-                <Label Content="Aerator _output (%)" Target="{Binding ElementName=AeratorOutput}"/>
-                <TextBox x:Name="AeratorOutput" Width="55"/>
-                <Button x:Name="AeratorApply" Content="Apply output" Click="ApplyAeratorOutput" Margin="8,0"/>
+
+                <Button x:Name="PumpToggle"
+                        Click="TogglePump"/>
+
+                <Label Content="Pump _speed (%)"
+                       Target="{Binding ElementName=PumpSpeed}"/>
+
+                <TextBox x:Name="PumpSpeed"
+                         Width="55"/>
+
+                <Button x:Name="PumpApply"
+                        Content="Apply speed"
+                        Click="ApplyPumpSpeed"
+                        Margin="8,0"/>
+
+                <Button x:Name="FilterToggle"
+                        Click="ToggleFilter"/>
+
+                <Button x:Name="AeratorToggle"
+                        Click="ToggleAerator"
+                        Margin="8,0"/>
+
+                <Label Content="Aerator _output (%)"
+                       Target="{Binding ElementName=AeratorOutput}"/>
+
+                <TextBox x:Name="AeratorOutput"
+                         Width="55"/>
+
+                <Button x:Name="AeratorApply"
+                        Content="Apply output"
+                        Click="ApplyAeratorOutput"
+                        Margin="8,0"/>
+
             </WrapPanel>
-            <TextBlock x:Name="CommandFeedback" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+
+            <!-- Sensor Threshold Configuration -->
+
+            <GroupBox Header="Sensor Threshold Configuration"
+                      Margin="0,8,0,8">
+
+                <StackPanel Margin="8">
+
+                    <WrapPanel Margin="0,0,0,8">
+
+                        <Label Content="Sensor:"/>
+
+                        <ComboBox x:Name="ThresholdSensorSelection"
+                                  Width="180"
+                                  DisplayMemberPath="Name"
+                                  SelectionChanged="SelectThresholdSensor"/>
+
+                    </WrapPanel>
+
+                    <WrapPanel>
+
+                        <Label Content="Warning Low"/>
+
+                        <TextBox x:Name="WarningLowInput"
+                                 Width="55"/>
+
+                        <Label Content="Normal Low"/>
+
+                        <TextBox x:Name="NormalLowInput"
+                                 Width="55"/>
+
+                        <Label Content="Normal High"/>
+
+                        <TextBox x:Name="NormalHighInput"
+                                 Width="55"/>
+
+                        <Label Content="Warning High"/>
+
+                        <TextBox x:Name="WarningHighInput"
+                                 Width="55"/>
+
+                        <Button x:Name="ApplyThresholdButton"
+                                Content="Apply thresholds"
+                                Click="ApplyThresholds"
+                                IsEnabled="False"
+                                Margin="8,0"/>
+
+                    </WrapPanel>
+
+                    <TextBlock x:Name="ThresholdFeedback"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,0"/>
+
+                </StackPanel>
+
+            </GroupBox>
+
+            <!-- Command Feedback -->
+
+            <TextBlock x:Name="CommandFeedback"
+                       TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite"/>
+
         </StackPanel>
-        <GroupBox Header="Active alarms for selected habitat" DockPanel.Dock="Bottom" Margin="0,8,0,0">
-            <ListBox x:Name="ActiveAlarms" MaxHeight="90" MinHeight="24"/>
+
+        <!-- Active Alarms -->
+
+        <GroupBox Header="Active alarms for selected habitat"
+                  DockPanel.Dock="Bottom"
+                  Margin="0,8,0,0">
+
+            <ListBox x:Name="ActiveAlarms"
+                     MaxHeight="90"
+                     MinHeight="24"/>
+
         </GroupBox>
+
+        <!-- Sensor Readings -->
+
         <ListView x:Name="SensorReadings">
+
             <ListView.View>
+
                 <GridView>
-                    <GridViewColumn Header="Habitat" DisplayMemberBinding="{Binding HabitatId}" Width="170"/>
-                    <GridViewColumn Header="Sensor" DisplayMemberBinding="{Binding SensorName}" Width="230"/>
-                    <GridViewColumn Header="Reading" DisplayMemberBinding="{Binding Reading}" Width="150"/>
-                    <GridViewColumn Header="Unit" DisplayMemberBinding="{Binding Unit}" Width="90"/>
-                    <GridViewColumn Header="Classification" DisplayMemberBinding="{Binding Classification}" Width="125"/>
+
+                    <GridViewColumn Header="Habitat"
+                                    DisplayMemberBinding="{Binding HabitatId}"
+                                    Width="170"/>
+
+                    <GridViewColumn Header="Sensor"
+                                    DisplayMemberBinding="{Binding SensorName}"
+                                    Width="230"/>
+
+                    <GridViewColumn Header="Reading"
+                                    DisplayMemberBinding="{Binding Reading}"
+                                    Width="150"/>
+
+                    <GridViewColumn Header="Unit"
+                                    DisplayMemberBinding="{Binding Unit}"
+                                    Width="90"/>
+
+                    <GridViewColumn Header="Classification"
+                                    DisplayMemberBinding="{Binding Classification}"
+                                    Width="125"/>
+
                 </GridView>
+
             </ListView.View>
+
         </ListView>
+
     </DockPanel>
+
 </Window>
